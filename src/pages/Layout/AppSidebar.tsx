@@ -30,9 +30,11 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="h-5" data-tauri-drag-region />
-        <H4 className="text-center" data-tauri-drag-region>
-          Justo Dev4
-        </H4>
+        <Link to="/">
+          <H4 className="text-center" data-tauri-drag-region>
+            Justo Dev4
+          </H4>
+        </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
