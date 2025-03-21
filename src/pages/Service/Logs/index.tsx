@@ -26,7 +26,6 @@ export default function Logs(props: Props) {
   }, [`${serviceName}.${category}`])
 
   useOnEvent(`serviceOutput.${service.fullName}`, () => {
-    console.log(`serviceOutput.${service.fullName}`)
     const isAtBottom = getIsScrolledAtBottom()
 
     setContent(processes.outputs[`${category}.${serviceName}`] || '')

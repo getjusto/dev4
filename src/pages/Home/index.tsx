@@ -4,6 +4,7 @@ export default function Home() {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg border bg-background">
       <FlickeringGrid
+        data-tauri-drag-region
         className="absolute inset-0 z-0 size-full"
         squareSize={4}
         gridGap={6}

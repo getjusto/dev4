@@ -34,6 +34,26 @@
     "shell:default",
     "shell:allow-kill",
     {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "kill-process",
+          "cmd": "kill",
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "ps",
+          "cmd": "ps",
+          "args": true
+        }
+      ]
+    },
+    {
       "identifier": "shell:allow-spawn",
       "allow": [
         {
