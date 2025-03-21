@@ -24,6 +24,10 @@ export function useProcesses(services: ServiceData[]) {
   }
 
   const startService = async (service: ServiceData) => {
+    if (processes[service.fullName]) {
+      return
+    }
+
     console.log(`starting ${service.fullName}`)
     resetOutput(service)
 
@@ -100,6 +104,8 @@ export function useProcesses(services: ServiceData[]) {
       // await processes[service.fullName].kill()
       resetOutput(service)
       console.log(`stopped ${service.fullName}`)
+
+      delete processes[service.fullName]
     } catch (error) {
       console.error(`error stopping ${service.fullName}:`, error)
     }

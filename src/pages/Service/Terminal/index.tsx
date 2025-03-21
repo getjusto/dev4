@@ -59,8 +59,12 @@ export default function Terminal(props: Props) {
 
     // Make sure terminal is properly sized
     setTimeout(() => {
-      fitAddon.fit()
-      console.log('Terminal dimensions:', {cols: term.cols, rows: term.rows})
+      try {
+        fitAddon.fit()
+        console.log('Terminal dimensions:', {cols: term.cols, rows: term.rows})
+      } catch (error) {
+        console.error('Error fitting terminal:', error)
+      }
     }, 100)
 
     // Set up data transport between the terminal and the process
