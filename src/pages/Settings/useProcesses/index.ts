@@ -11,10 +11,10 @@ export function useProcesses(services: ServiceData[]) {
   const addContent = (service: ServiceData, content: string) => {
     outputs[`${service.category}.${service.name}`] =
       `${outputs[`${service.category}.${service.name}`] || ''}${content}`
-    // strip to 10000 lines
+    // strip to 1000 lines
     outputs[`${service.category}.${service.name}`] = outputs[`${service.category}.${service.name}`]
       .split('\n')
-      .slice(-10000)
+      .slice(-1000)
       .join('\n')
 
     setTimeout(() => {

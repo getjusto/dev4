@@ -6,6 +6,7 @@ import {FitAddon} from '@xterm/addon-fit'
 import {platform} from '@tauri-apps/plugin-os'
 import {useServiceData} from '@/pages/Settings/Context'
 import {useParams} from 'react-router-dom'
+import {WebLinksAddon} from '@xterm/addon-web-links'
 
 export default function Terminal() {
   const {serviceName, category} = useParams()
@@ -33,6 +34,9 @@ export default function Terminal() {
     // Create the fit addon to auto-resize terminal
     const fitAddon = new FitAddon()
     term.loadAddon(fitAddon)
+
+    const webLinksAddon = new WebLinksAddon()
+    term.loadAddon(webLinksAddon)
 
     // Open the terminal in the container
     term.open(terminalRef.current)
