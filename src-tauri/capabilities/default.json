@@ -1,0 +1,73 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "pty:allow-spawn",
+    "pty:default",
+    "core:default",
+    "core:window:allow-start-dragging",
+    "opener:default",
+    "fs:read-all",
+    "fs:write-all",
+    "fs:allow-mkdir",
+    "fs:allow-rename",
+    "fs:allow-remove",
+    "fs:allow-copy-file",
+    "fs:allow-exists",
+    "fs:allow-watch",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APP_CONFIG_DIR/**"
+        },
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    "process:default",
+    "shell:default",
+    "shell:allow-kill",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "sh .start.run.sh",
+          "cmd": "sh",
+          "args": [
+            ".start.run.sh"
+          ]
+        },
+        {
+          "name": "sh start.sh",
+          "cmd": "sh",
+          "args": [
+            "start.sh"
+          ]
+        },
+        {
+          "name": "yarn start",
+          "cmd": "yarn",
+          "args": [
+            "start"
+          ]
+        }
+      ]
+    },
+    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "http://127.0.0.1:*"
+        }
+      ]
+    },
+    "os:default"
+  ]
+}
