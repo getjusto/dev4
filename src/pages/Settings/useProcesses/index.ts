@@ -5,7 +5,6 @@ import {fireEvent} from 'react-app-events'
 
 export function useProcesses(services: ServiceData[]) {
   const processes = useRef<Record<string, Child>>({}).current
-  const commands = useRef<Record<string, Command<string>>>({}).current
   const outputs = useRef<Record<string, string>>({}).current
 
   const addContent = (service: ServiceData, content: string) => {
@@ -31,30 +30,28 @@ export function useProcesses(services: ServiceData[]) {
     console.log(`starting ${service.fullName}`)
     resetOutput(service)
 
-    if (!commands[service.fullName]) {
-      const command = Command.create(service.startCommand, service.startCommand.split(' '), {
-        cwd: service.path,
-      })
+    const commands = ['-l', '-c', `${service.startCommand}`]
+    console.log('commands', commands.join(' '))
+    const command = Command.create('/bin/zsh', commands, {
+      cwd: service.path,
+    })
 
-      commands[service.fullName] = command
+    command.stdout.on('data', data => {
+      addContent(service, data)
+    })
+    command.stderr.on('data', data => {
+      addContent(service, data)
+    })
 
-      command.stdout.on('data', data => {
-        addContent(service, data)
-      })
-      command.stderr.on('data', data => {
-        addContent(service, data)
-      })
+    command.on('close', data => {
+      addContent(service, `command finished with code ${data.code} and signal ${data.signal}\n\n`)
+    })
+    command.on('error', error => {
+      console.error(`command error: "${error}"`)
+      addContent(service, `command error: "${error}"`)
+    })
 
-      command.on('close', data => {
-        addContent(service, `command finished with code ${data.code} and signal ${data.signal}\n\n`)
-      })
-      command.on('error', error => {
-        console.error(`command error: "${error}"`)
-        addContent(service, `command error: "${error}"`)
-      })
-    }
-
-    processes[service.fullName] = await commands[service.fullName].spawn()
+    processes[service.fullName] = await command.spawn()
     console.log(`started ${service.fullName}`, {pid: processes[service.fullName].pid})
   }
 

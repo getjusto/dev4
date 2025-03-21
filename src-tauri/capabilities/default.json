@@ -57,6 +57,11 @@
       "identifier": "shell:allow-spawn",
       "allow": [
         {
+          "name": "/bin/zsh",
+          "cmd": "/bin/zsh",
+          "args": true
+        },
+        {
           "name": "sh .start.run.sh",
           "cmd": "sh",
           "args": [

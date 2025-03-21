@@ -93,6 +93,9 @@ export default function Terminal(props: Props) {
   useEffect(() => {
     if (!props.hidden) {
       fitAddonRef.current?.fit()
+      setTimeout(() => {
+        fitAddonRef.current?.fit()
+      }, 100)
     }
   }, [props.hidden])
 
@@ -120,7 +123,7 @@ function getDefaultShell() {
   }
 
   if (name.includes('mac')) {
-    return {command: '/bin/zsh', args: []}
+    return {command: '/bin/zsh', args: ['-l']}
   }
 
   // Linux or other Unix-like systems
