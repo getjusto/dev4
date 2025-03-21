@@ -39,7 +39,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            <Collapsible className="group/collapsible">
+            <Collapsible defaultOpen className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton>Services</SidebarMenuButton>
@@ -62,7 +62,7 @@ export function AppSidebar() {
             </Collapsible>
           </SidebarMenu>
           <SidebarMenu>
-            <Collapsible className="group/collapsible">
+            <Collapsible defaultOpen className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton>Justo</SidebarMenuButton>
@@ -85,7 +85,7 @@ export function AppSidebar() {
             </Collapsible>
           </SidebarMenu>
           <SidebarMenu>
-            <Collapsible className="group/collapsible">
+            <Collapsible defaultOpen className="group/collapsible">
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton>Delivery</SidebarMenuButton>
