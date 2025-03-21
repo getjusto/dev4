@@ -9,32 +9,28 @@ export function useProcesses(services: ServiceData[]) {
   const outputs = useRef<Record<string, string>>({}).current
 
   const addContent = (service: ServiceData, content: string) => {
-    outputs[`${service.category}.${service.name}`] =
-      `${outputs[`${service.category}.${service.name}`] || ''}${content}`
+    outputs[service.fullName] = `${outputs[service.fullName] || ''}${content}`
     // strip to 1000 lines
-    outputs[`${service.category}.${service.name}`] = outputs[`${service.category}.${service.name}`]
-      .split('\n')
-      .slice(-1000)
-      .join('\n')
+    outputs[service.fullName] = outputs[service.fullName].split('\n').slice(-1000).join('\n')
 
     setTimeout(() => {
-      fireEvent(`serviceOutput.${service.name}.${service.category}`, {})
+      fireEvent(`serviceOutput.${service.fullName}`, {})
     }, 100)
   }
 
   const startService = async (service: ServiceData) => {
-    console.log(`starting ${service.name}`)
-    if (processes[service.name]) {
+    console.log(`starting ${service.fullName}`)
+    if (processes[service.fullName]) {
       return
     }
-    if (commands[`${service.category}.${service.name}`]) {
+    if (commands[service.fullName]) {
       return
     }
     const command = Command.create(service.startCommand, service.startCommand.split(' '), {
       cwd: service.path,
     })
 
-    commands[`${service.category}.${service.name}`] = command
+    commands[service.fullName] = command
 
     command.stdout.on('data', data => {
       addContent(service, data)
@@ -44,8 +40,7 @@ export function useProcesses(services: ServiceData[]) {
     })
 
     command.on('close', data => {
-      console.log(`command finished with code ${data.code} and signal ${data.signal}`)
-      addContent(service, `command finished with code ${data.code} and signal ${data.signal}`)
+      addContent(service, `command finished with code ${data.code} and signal ${data.signal}\n\n`)
     })
     command.on('error', error => {
       console.error(`command error: "${error}"`)
@@ -54,32 +49,32 @@ export function useProcesses(services: ServiceData[]) {
 
     const child = await command.spawn()
 
-    processes[service.name] = child
+    processes[service.fullName] = child
   }
 
   const stopService = (service: ServiceData) => {
-    console.log(`stopping ${service.name}`)
-    if (!processes[service.name]) {
+    console.log(`stopping ${service.fullName}`)
+    if (!processes[service.fullName]) {
       return
     }
 
-    outputs[`${service.category}.${service.name}`] = ''
-    addContent(service, `Stopped ${service.name}\n\n`)
+    outputs[service.fullName] = ''
+    addContent(service, `Stopped ${service.fullName}\n\n`)
 
-    processes[service.name].kill()
-    delete processes[service.name]
-    delete commands[`${service.category}.${service.name}`]
+    processes[service.fullName].kill()
+    delete processes[service.fullName]
+    delete commands[service.fullName]
   }
 
   const ensureServicesRunning = async () => {
     for (const service of services) {
       if (service.on) {
-        if (!processes[service.name]) {
+        if (!processes[service.fullName]) {
           await startService(service)
         }
       }
       if (!service.on) {
-        if (processes[service.name]) {
+        if (processes[service.fullName]) {
           stopService(service)
         }
       }
@@ -90,8 +85,20 @@ export function useProcesses(services: ServiceData[]) {
     ensureServicesRunning()
   }, [JSON.stringify(services)])
 
+  useEffect(() => {
+    return () => {
+      for (const service of services) {
+        stopService(service)
+      }
+    }
+  }, [])
+
   return {
     processes,
     outputs,
+    resetOutput: (service: ServiceData) => {
+      outputs[service.fullName] = ''
+      addContent(service, '')
+    },
   }
 }

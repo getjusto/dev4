@@ -21,6 +21,7 @@ export async function getServicesInServices(settings: AppSettings) {
           startCommand: 'sh .start.run.sh',
           port: info.port,
           category: 'services',
+          fullName: `services.${serviceDirName.name}`,
         } as ServiceData
       } catch (_error) {
         // console.error(`Error reading service ${serviceDirName.name}:`, error)
@@ -52,6 +53,7 @@ export async function getServicesInJusto(settings: AppSettings): Promise<Service
       port: 3000,
       category: 'justo',
       startCommand: 'sh start.sh',
+      fullName: 'justo.main',
     },
     {
       name: 'web',
@@ -61,6 +63,7 @@ export async function getServicesInJusto(settings: AppSettings): Promise<Service
       port: 3010,
       category: 'justo',
       startCommand: 'yarn start',
+      fullName: 'justo.web',
     },
   ]
 }
@@ -77,6 +80,7 @@ export async function getServicesInDelivery(settings: AppSettings): Promise<Serv
       on: settings.onServices?.['delivery.main'] || false,
       port: 3410,
       startCommand: 'sh start.sh',
+      fullName: 'delivery.main',
     },
     {
       name: 'web',
@@ -86,6 +90,7 @@ export async function getServicesInDelivery(settings: AppSettings): Promise<Serv
       on: settings.onServices?.['delivery.web'] || false,
       port: 3420,
       startCommand: 'yarn start',
+      fullName: 'delivery.web',
     },
   ]
 }

@@ -8,6 +8,7 @@ export interface ServiceData {
   name: string
   path: string
   port: number
+  fullName: string
   on: boolean
   category: 'services' | 'justo' | 'delivery'
   config: Record<string, any>

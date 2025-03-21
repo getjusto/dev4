@@ -12,9 +12,12 @@ import {useServiceData, useSettings} from '../Settings/Context'
 import {Switch} from '@/components/ui/switch'
 import Logs from './Logs'
 import Terminal from './Terminal'
+import {Button} from '@/components/ui/button'
+import {Trash} from 'lucide-react'
+import {cn} from '@/lib/utils'
 
 export default function Service() {
-  const {setServiceOn} = useSettings()
+  const {setServiceOn, processes} = useSettings()
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const [tab, setTab] = useState<'logs' | 'terminal'>('logs')
@@ -26,13 +29,14 @@ export default function Service() {
   return (
     <div className="flex flex-col overflow-hidden h-full" key={`${category}.${serviceName}`}>
       <div
-        className="flex justify-between items-center space-x-4 p-5 bg-sidebar"
+        className="flex justify-between items-center space-x-2 p-5 bg-sidebar"
         data-tauri-drag-region
       >
         <Switch
           checked={service.on}
           onCheckedChange={(checked: boolean) => setServiceOn(category, serviceName, checked)}
         />
+        <div className="" />
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -45,6 +49,15 @@ export default function Service() {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="flex-1" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            processes.resetOutput(service)
+          }}
+        >
+          <Trash className="w-4 h-4" />
+        </Button>
 
         <Tabs
           className=""
@@ -57,8 +70,18 @@ export default function Service() {
           </TabsList>
         </Tabs>
       </div>
-      {tab === 'logs' && <Logs />}
-      {tab === 'terminal' && <Terminal />}
+      <Logs
+        className={cn({
+          '': tab === 'logs',
+          hidden: tab !== 'logs',
+        })}
+      />
+      <Terminal
+        className={cn({
+          '': tab === 'terminal',
+          hidden: tab !== 'terminal',
+        })}
+      />
     </div>
   )
 }

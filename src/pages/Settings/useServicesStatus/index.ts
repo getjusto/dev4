@@ -36,10 +36,20 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
 async function getServiceStatus(service: ServiceData): Promise<ServiceStatus> {
   if (!service.on) return 'off'
   try {
-    // fetch with timeout
-    await fetch(`http://127.0.0.1:${service.port}`)
+    await fetchWithTimeout(`http://127.0.0.1:${service.port}`, {}, 4000)
     return 'on'
   } catch {
     return 'error'
   }
+}
+
+function fetchWithTimeout(url, options = {}, timeout = 5000) {
+  const controller = new AbortController()
+  const signal = controller.signal
+
+  const fetchPromise = fetch(url, {...options, signal})
+
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  return fetchPromise.finally(() => clearTimeout(timeoutId))
 }

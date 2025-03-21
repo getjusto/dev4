@@ -7,8 +7,13 @@ import {platform} from '@tauri-apps/plugin-os'
 import {useServiceData} from '@/pages/Settings/Context'
 import {useParams} from 'react-router-dom'
 import {WebLinksAddon} from '@xterm/addon-web-links'
+import {cn} from '@/lib/utils'
 
-export default function Terminal() {
+interface Props {
+  className?: string
+}
+
+export default function Terminal(props: Props) {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const terminalRef = useRef<HTMLDivElement>(null)
@@ -93,7 +98,7 @@ export default function Terminal() {
   }, [])
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className={cn('h-full w-full flex flex-col', props.className)}>
       <div
         ref={terminalRef}
         className="flex-1 min-h-0 w-full"

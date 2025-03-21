@@ -1,18 +1,22 @@
 import {useParams} from 'react-router-dom'
-import {useSettings} from '../../Settings/Context'
+import {useServiceData, useSettings} from '../../Settings/Context'
 import Ansi from 'ansi-to-react'
 import {useEffect, useRef, useState} from 'react'
 import {useOnEvent} from 'react-app-events'
+import {cn} from '@/lib/utils'
 
-export default function Logs() {
+interface Props {
+  className?: string
+}
+
+export default function Logs(props: Props) {
   const {serviceName, category} = useParams()
-  // const {service} = useServiceData(serviceName, category)
+  const service = useServiceData(serviceName, category)
   const {processes} = useSettings()
-  const serviceOutput = processes.outputs[`${category}.${serviceName}`] || ''
   const container = useRef<HTMLPreElement>(null)
   const [content, setContent] = useState('')
   useEffect(() => {
-    setContent(serviceOutput)
+    setContent(processes.outputs[`${category}.${serviceName}`] || '')
     setTimeout(() => {
       const scrollToBottom = document.getElementById('scroll-to-bottom')
       if (scrollToBottom) {
@@ -21,10 +25,11 @@ export default function Logs() {
     }, 50)
   }, [`${serviceName}.${category}`])
 
-  useOnEvent(`serviceOutput.${serviceName}.${category}`, () => {
+  useOnEvent(`serviceOutput.${service.fullName}`, () => {
+    console.log(`serviceOutput.${service.fullName}`)
     const isAtBottom = getIsScrolledAtBottom()
 
-    setContent(serviceOutput)
+    setContent(processes.outputs[`${category}.${serviceName}`] || '')
 
     if (!isAtBottom) return
     setTimeout(() => {
@@ -47,9 +52,20 @@ export default function Logs() {
     return isAtBottom
   }
 
+  if (!service.on) {
+    return (
+      <div className="flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs">
+        <div className="text-center text-muted-foreground">Servicio apagado</div>
+      </div>
+    )
+  }
+
   return (
     <pre
-      className="flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs"
+      className={cn(
+        'flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs',
+        props.className,
+      )}
       ref={container}
     >
       <Ansi>{content}</Ansi>
