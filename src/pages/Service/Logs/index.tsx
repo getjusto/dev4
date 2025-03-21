@@ -53,7 +53,12 @@ export default function Logs(props: Props) {
 
   if (!service.on) {
     return (
-      <div className="flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs">
+      <div
+        className={cn(
+          'flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs',
+          props.className,
+        )}
+      >
         <div className="text-center text-muted-foreground">Servicio apagado</div>
       </div>
     )

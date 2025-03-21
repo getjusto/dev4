@@ -10,7 +10,7 @@ import {WebLinksAddon} from '@xterm/addon-web-links'
 import {cn} from '@/lib/utils'
 
 interface Props {
-  className?: string
+  hidden?: boolean
 }
 
 export default function Terminal(props: Props) {
@@ -45,7 +45,6 @@ export default function Terminal(props: Props) {
 
     // Open the terminal in the container
     term.open(terminalRef.current)
-    fitAddon.fit()
 
     // Determine which shell to use based on OS
     const shellCommand = getDefaultShell()
@@ -56,16 +55,6 @@ export default function Terminal(props: Props) {
       rows: term.rows,
       cwd: service.path,
     })
-
-    // Make sure terminal is properly sized
-    setTimeout(() => {
-      try {
-        fitAddon.fit()
-        console.log('Terminal dimensions:', {cols: term.cols, rows: term.rows})
-      } catch (error) {
-        console.error('Error fitting terminal:', error)
-      }
-    }, 100)
 
     // Set up data transport between the terminal and the process
     pty.onData((data: string) => {
@@ -101,8 +90,18 @@ export default function Terminal(props: Props) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!props.hidden) {
+      fitAddonRef.current?.fit()
+    }
+  }, [props.hidden])
+
   return (
-    <div className={cn('h-full w-full flex flex-col', props.className)}>
+    <div
+      className={cn('h-full w-full flex flex-col', {
+        hidden: props.hidden,
+      })}
+    >
       <div
         ref={terminalRef}
         className="flex-1 min-h-0 w-full"

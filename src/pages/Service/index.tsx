@@ -76,12 +76,7 @@ export default function Service() {
           hidden: tab !== 'logs',
         })}
       />
-      <Terminal
-        className={cn({
-          '': tab === 'terminal',
-          hidden: tab !== 'terminal',
-        })}
-      />
+      <Terminal hidden={tab !== 'terminal'} />
     </div>
   )
 }
