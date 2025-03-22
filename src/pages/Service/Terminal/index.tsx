@@ -54,6 +54,9 @@ export default function Terminal(props: Props) {
       cols: term.cols,
       rows: term.rows,
       cwd: service.path,
+      env: {
+        TERM: 'xterm-256color',
+      },
     })
 
     // Set up data transport between the terminal and the process
@@ -123,9 +126,9 @@ function getDefaultShell() {
   }
 
   if (name.includes('mac')) {
-    return {command: '/bin/zsh', args: ['-l']}
+    return {command: '/bin/zsh', args: ['-l', '-i']}
   }
 
   // Linux or other Unix-like systems
-  return {command: '/bin/bash', args: []}
+  return {command: '/bin/bash', args: ['-l', '-i']}
 }
