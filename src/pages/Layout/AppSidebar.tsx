@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
 } from '@/components/ui/sidebar'
-import {Link} from 'react-router-dom'
+import {Link, useLocation} from 'react-router-dom'
 import {H4} from '@/components/ui/typography'
 import {useSettings} from '../Settings/Context'
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '@/components/ui/collapsible'
@@ -26,6 +26,7 @@ function ServiceStatusComp({status}: {status: ServiceStatus}) {
 
 export function AppSidebar() {
   const {services, status} = useSettings()
+  const location = useLocation()
   return (
     <Sidebar>
       <SidebarHeader>
@@ -48,7 +49,12 @@ export function AppSidebar() {
                   <SidebarMenuSub>
                     {services.servicesList.map(item => (
                       <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={location.pathname.includes(
+                            `/services/${item.category}/${item.name}`,
+                          )}
+                        >
                           <Link to={`/services/services/${item.name}`}>
                             <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
                             <span>{item.name}</span>
@@ -71,7 +77,12 @@ export function AppSidebar() {
                   <SidebarMenuSub>
                     {services.justoList.map(item => (
                       <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={location.pathname.includes(
+                            `/services/${item.category}/${item.name}`,
+                          )}
+                        >
                           <Link to={`/services/justo/${item.name}`}>
                             <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
                             <span>{item.name}</span>
@@ -94,7 +105,12 @@ export function AppSidebar() {
                   <SidebarMenuSub>
                     {services.deliveryList.map(item => (
                       <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton asChild>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={location.pathname.includes(
+                            `/services/${item.category}/${item.name}`,
+                          )}
+                        >
                           <Link to={`/services/delivery/${item.name}`}>
                             <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
                             <span>{item.name}</span>
