@@ -13,8 +13,9 @@ import {Switch} from '@/components/ui/switch'
 import Logs from './Logs'
 import Terminal from './Terminal'
 import {Button} from '@/components/ui/button'
-import {Trash} from 'lucide-react'
+import {Code, Trash} from 'lucide-react'
 import {cn} from '@/lib/utils'
+import {Command} from '@tauri-apps/plugin-shell'
 
 export default function Service() {
   const {setServiceOn, processes} = useSettings()
@@ -57,6 +58,18 @@ export default function Service() {
           }}
         >
           <Trash className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            await Command.create('/bin/zsh', ['-l', '-c', 'cursor', '.'], {
+              cwd: service.path,
+            }).execute()
+          }}
+        >
+          <Code className="w-4 h-4" />
         </Button>
 
         <Tabs

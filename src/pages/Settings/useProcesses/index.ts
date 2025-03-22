@@ -2,6 +2,7 @@ import {useEffect, useRef} from 'react'
 import {ServiceData} from '../useServices'
 import {Command, Child} from '@tauri-apps/plugin-shell'
 import {fireEvent} from 'react-app-events'
+import {WebviewWindow} from '@tauri-apps/api/webviewWindow'
 
 export function useProcesses(services: ServiceData[]) {
   const processes = useRef<Record<string, Child>>({}).current
@@ -60,6 +61,8 @@ export function useProcesses(services: ServiceData[]) {
       if (!processes[service.fullName]) {
         return
       }
+
+      console.log(`stopping ${service.fullName}`)
 
       const pid = processes[service.fullName].pid
       const {stdout: processList} = await Command.create('ps', [
@@ -121,6 +124,29 @@ export function useProcesses(services: ServiceData[]) {
 
   useEffect(() => {
     ensureServicesRunning()
+
+    let unlisten: () => void
+    WebviewWindow.getCurrent()
+      .onCloseRequested(async event => {
+        event.preventDefault()
+        console.log('close requested')
+        for (const service of services) {
+          console.log('stopping service', service.fullName)
+          await stopService(service)
+        }
+        setTimeout(() => {
+          WebviewWindow.getCurrent().destroy()
+        }, 500)
+      })
+      .then(un => {
+        unlisten = un
+      })
+
+    // you need to call unlisten if your handler goes out of scope e.g. the component is unmounted
+
+    return () => {
+      unlisten?.()
+    }
   }, [JSON.stringify(services)])
 
   useEffect(() => {

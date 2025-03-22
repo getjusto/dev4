@@ -6,6 +6,8 @@
     "main"
   ],
   "permissions": [
+    "core:window:allow-destroy",
+    "core:window:allow-close",
     "pty:allow-spawn",
     "pty:default",
     "core:default",
@@ -49,6 +51,11 @@
         {
           "name": "ps",
           "cmd": "ps",
+          "args": true
+        },
+        {
+          "name": "/bin/zsh",
+          "cmd": "/bin/zsh",
           "args": true
         }
       ]
