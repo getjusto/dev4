@@ -37,10 +37,10 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": false,
-    "targets": [
-      "app",
-      "dmg"
-    ],
+    "macOS": {
+      "signingIdentity": "Developer ID Application: Orionsoft SpA (3CZ24HA8DS)",
+      "hardenedRuntime": true
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
