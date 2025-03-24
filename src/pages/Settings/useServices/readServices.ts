@@ -18,7 +18,7 @@ export async function getServicesInServices(settings: AppSettings) {
           name: serviceDirName.name,
           path: `${basePath}`,
           on: settings.onServices?.[`services.${serviceDirName.name}`] || false,
-          startCommand: 'sh .start.run.sh',
+          startCommand: 'sh .start.wrap.sh',
           port: info.port,
           category: 'services',
           fullName: `services.${serviceDirName.name}`,
