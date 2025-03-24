@@ -9,7 +9,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import {useServiceData, useSettings} from '../Settings/Context'
-import {Switch} from '@/components/ui/switch'
 import Logs from './Logs'
 import Terminal from './Terminal'
 import {Button} from '@/components/ui/button'
@@ -18,7 +17,7 @@ import {cn} from '@/lib/utils'
 import {Command} from '@tauri-apps/plugin-shell'
 
 export default function Service() {
-  const {setServiceOn, processes} = useSettings()
+  const {processes} = useSettings()
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const [tab, setTab] = useState<'logs' | 'terminal'>('logs')
@@ -33,11 +32,10 @@ export default function Service() {
         className="flex justify-between items-center space-x-2 p-5 bg-sidebar"
         data-tauri-drag-region
       >
-        <Switch
+        {/* <Switch
           checked={service.on}
           onCheckedChange={(checked: boolean) => setServiceOn(category, serviceName, checked)}
-        />
-        <div className="" />
+        /> */}
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -64,7 +62,7 @@ export default function Service() {
           variant="outline"
           size="sm"
           onClick={async () => {
-            await Command.create('/bin/zsh', ['-l', '-c', 'cursor', '.'], {
+            await Command.create('/bin/zsh', ['-l', '-c', 'cursor .'], {
               cwd: service.path,
             }).execute()
           }}

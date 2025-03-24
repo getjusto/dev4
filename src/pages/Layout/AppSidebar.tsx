@@ -5,28 +5,41 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
 } from '@/components/ui/sidebar'
 import {Link, useLocation} from 'react-router-dom'
 import {H4} from '@/components/ui/typography'
 import {useSettings} from '../Settings/Context'
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from '@/components/ui/collapsible'
-import {ServiceStatus} from '../Settings/useServicesStatus'
+import {ServiceData} from '../Settings/useServices'
+import {cn} from '@/lib/utils'
+import {SwitchSmall} from '@/components/ui/switch-small'
 
-function ServiceStatusComp({status}: {status: ServiceStatus}) {
-  if (status === 'on') return <div className="w-2 h-2 bg-green-500 rounded-full" />
-  if (status === 'off') return <div className="w-2 h-2 bg-gray-500 rounded-full" />
-  if (status === 'error') return <div className="w-2 h-2 bg-red-500 rounded-full" />
-  return <div className="w-2 h-2 bg-gray-500 rounded-full" />
+function ServiceStatusComp({service}: {service: ServiceData}) {
+  const {status: allStatus, setServiceOn} = useSettings()
+  const status = allStatus[`${service.category}.${service.name}`]
+
+  return (
+    <SwitchSmall
+      checked={status !== 'off'}
+      className={cn('cursor-pointer', {
+        '!bg-green-500': status === 'on',
+        // '!bg-blue-500': status === 'off',
+        '!bg-red-500': status === 'error',
+      })}
+      onCheckedChange={(checked: boolean) => setServiceOn(service.category, service.name, checked)}
+    />
+  )
 }
 
 export function AppSidebar() {
-  const {services, status} = useSettings()
+  const {services} = useSettings()
   const location = useLocation()
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -39,89 +52,61 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {services.servicesList.map(item => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
+                  >
+                    <Link to={`/services/services/${item.name}`}>
+                      <ServiceStatusComp service={item} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {services.justoList.map(item => (
+                <SidebarMenuItem key={item.name}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
+                  >
+                    <Link to={`/services/justo/${item.name}`}>
+                      <ServiceStatusComp service={item} />
+                      <span>{item.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Delivery</SidebarGroupLabel>
           <SidebarMenu>
-            <Collapsible defaultOpen className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton>Services</SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {services.servicesList.map(item => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={location.pathname.includes(
-                            `/services/${item.category}/${item.name}`,
-                          )}
-                        >
-                          <Link to={`/services/services/${item.name}`}>
-                            <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
-                            <span>{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
+            {services.deliveryList.map(item => (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
+                >
+                  <Link to={`/services/delivery/${item.name}`}>
+                    <ServiceStatusComp service={item} />
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
-            </Collapsible>
-          </SidebarMenu>
-          <SidebarMenu>
-            <Collapsible defaultOpen className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton>Justo</SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {services.justoList.map(item => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={location.pathname.includes(
-                            `/services/${item.category}/${item.name}`,
-                          )}
-                        >
-                          <Link to={`/services/justo/${item.name}`}>
-                            <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
-                            <span>{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          </SidebarMenu>
-          <SidebarMenu>
-            <Collapsible defaultOpen className="group/collapsible">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton>Delivery</SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    {services.deliveryList.map(item => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={location.pathname.includes(
-                            `/services/${item.category}/${item.name}`,
-                          )}
-                        >
-                          <Link to={`/services/delivery/${item.name}`}>
-                            <ServiceStatusComp status={status[`${item.category}.${item.name}`]} />
-                            <span>{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+            ))}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
