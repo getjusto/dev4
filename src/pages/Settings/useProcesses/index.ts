@@ -91,14 +91,14 @@ export function useProcesses(services: ServiceData[]) {
       })
 
       const killResult = await Command.create('kill-process', ['-9', pid.toString()]).execute()
-      console.log('killResult', {killResult, pid})
+      console.log('killResult', {killResult, pid, serviceName: service.fullName})
 
       for (const childPid of childrenPids) {
         const killResult = await Command.create('kill-process', [
           '-9',
           childPid.toString(),
         ]).execute()
-        console.log('killResult', {killResult, childPid, pid})
+        console.log('killResult', {killResult, childPid, pid, serviceName: service.fullName})
       }
 
       // await processes[service.fullName].kill()
@@ -130,10 +130,7 @@ export function useProcesses(services: ServiceData[]) {
       .onCloseRequested(async event => {
         event.preventDefault()
         console.log('close requested')
-        for (const service of services) {
-          console.log('stopping service', service.fullName)
-          await stopService(service)
-        }
+        await Promise.all(services.map(service => stopService(service)))
         setTimeout(() => {
           WebviewWindow.getCurrent().destroy()
         }, 500)

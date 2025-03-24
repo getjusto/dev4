@@ -28,6 +28,7 @@ tauri-plugin-shell = "2"
 tauri-plugin-http = "2"
 tauri-plugin-pty = "0.1.0"
 tauri-plugin-os = "2"
+tauri-plugin-log = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"

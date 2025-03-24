@@ -8,26 +8,42 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
   const [status, setStatus] = useState<Record<string, ServiceStatus>>({})
 
   useEffect(() => {
-    const checkStatus = async () => {
-      const newStatus = {}
+    console.log('services', services)
+    const timeouts: Record<string, NodeJS.Timeout> = {}
+    let isMounted = true
+    const checkStatus = async (service: ServiceData) => {
+      const serviceKey = `${service.category}.${service.name}`
+      const newStatus = await getServiceStatus(service)
 
-      for (const service of [
-        ...services.servicesList,
-        ...services.justoList,
-        ...services.deliveryList,
-      ]) {
-        const status = await getServiceStatus(service)
-        newStatus[`${service.category}.${service.name}`] = status
-      }
+      setStatus(prev => {
+        if (prev[serviceKey] === newStatus) {
+          return prev
+        }
+        return {...prev, [serviceKey]: newStatus}
+      })
 
-      if (JSON.stringify(status) !== JSON.stringify(newStatus)) {
-        setStatus(newStatus)
-      }
+      timeouts[serviceKey] = setTimeout(() => {
+        if (isMounted) {
+          checkStatus(service)
+        }
+      }, 2000)
     }
 
-    checkStatus()
-    const interval = setInterval(checkStatus, 5000)
-    return () => clearInterval(interval)
+    for (const service of [
+      ...services.servicesList,
+      ...services.justoList,
+      ...services.deliveryList,
+    ]) {
+      checkStatus(service)
+    }
+
+    return () => {
+      isMounted = false
+      const timeoutsArray = Object.values(timeouts)
+      for (const timeout of timeoutsArray) {
+        clearTimeout(timeout)
+      }
+    }
   }, [services])
 
   return status
@@ -36,7 +52,7 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
 async function getServiceStatus(service: ServiceData): Promise<ServiceStatus> {
   if (!service.on) return 'off'
   try {
-    await fetchWithTimeout(`http://127.0.0.1:${service.port}`, {}, 4000)
+    await fetchWithTimeout(`http://127.0.0.1:${service.port}`, {}, 5000)
     return 'on'
   } catch {
     return 'error'

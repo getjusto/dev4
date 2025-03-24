@@ -51,24 +51,14 @@ export default function Logs(props: Props) {
     return isAtBottom
   }
 
-  if (!service.on) {
-    return (
-      <div
-        className={cn(
-          'flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs',
-          props.className,
-        )}
-      >
-        <div className="text-center text-muted-foreground">Servicio apagado</div>
-      </div>
-    )
-  }
-
   return (
     <pre
       className={cn(
         'flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs',
         props.className,
+        {
+          'opacity-50': !service.on,
+        },
       )}
       ref={container}
     >

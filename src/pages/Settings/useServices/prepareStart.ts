@@ -27,19 +27,7 @@ else
   echo "No process running on port $PORT"
 fi
 
-# Start in a new process group explicitly
-sh start.sh &
-child_pid=$!
-
-parent_pid=$PPID
-
-# Polling to detect parent termination
-while kill -0 "$parent_pid" 2>/dev/null; do
-  sleep 1
-done
-
-echo "Parent app terminated. Killing child processes."
-kill -TERM -"$(ps -o pgid= "$child_pid" | grep -o "[0-9]*")"
+exec sh start.sh 
 `
     await writeTextFile(`${service.path}/.start.run.sh`, script)
   }

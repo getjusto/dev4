@@ -100,6 +100,8 @@
         }
       ]
     },
-    "os:default"
+    "os:default",
+    "log:allow-log",
+    "log:default"
   ]
 }
