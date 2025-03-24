@@ -69,10 +69,10 @@
           "args": true
         },
         {
-          "name": "sh .start.wrap.sh",
+          "name": "sh .start.run.sh",
           "cmd": "sh",
           "args": [
-            ".start.wrap.sh"
+            ".start.run.sh"
           ]
         },
         {

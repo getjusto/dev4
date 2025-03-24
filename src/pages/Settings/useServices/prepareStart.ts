@@ -16,6 +16,17 @@ export SERVICE_NAME=${service.name}
 export PORT=${service.port}
 yarn --frozen-lockfile
 
+# Check if a process is running on the specified port (TCP)
+PID=$(lsof -ti tcp:"$PORT")
+
+if [ -n "$PID" ]; then
+  echo "Process already running on port $PORT, PID(s): $PID"
+  kill -TERM $PID
+  echo "Killed process(es) with PID(s): $PID"
+else
+  echo "No process running on port $PORT"
+fi
+
 # Start in a new process group explicitly
 sh start.sh &
 child_pid=$!
@@ -31,10 +42,5 @@ echo "Parent app terminated. Killing child processes."
 kill -TERM -"$(ps -o pgid= "$child_pid" | grep -o "[0-9]*")"
 `
     await writeTextFile(`${service.path}/.start.run.sh`, script)
-
-    const script2 = `#!/bin/bash
-sh .start.run.sh
-    `
-    await writeTextFile(`${service.path}/.start.wrap.sh`, script2)
   }
 }
