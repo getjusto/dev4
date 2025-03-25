@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import Ansi from 'ansi-to-react'
 
 export interface Match {
   text: string;
@@ -12,7 +13,7 @@ export interface HighlightProps {
 }
 
 export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: HighlightProps) => {
-  if (!searchQuery || !text) return <>{text}</>
+  if (!searchQuery || !text) return <Ansi>{text}</Ansi>
   
   const safeSearchQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   
@@ -33,7 +34,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
     match = regex.exec(text);
   }
   
-  if (matches.length === 0) return <>{text}</>;
+  if (matches.length === 0) return <Ansi>{text}</Ansi>;
   
   const segments: JSX.Element[] = [];
   let lastIndex = 0;
@@ -42,7 +43,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
     if (match.index > lastIndex) {
       segments.push(
         <span key={`text-${i}`}>
-          {text.substring(lastIndex, match.index)}
+          <Ansi>{text.substring(lastIndex, match.index)}</Ansi>
         </span>
       );
     }
@@ -57,7 +58,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
         )}
         id={isCurrentMatch ? 'current-search-match' : `search-match-${i}`}
       >
-        {match.text}
+        <Ansi>{match.text}</Ansi>
       </span>
     );
     
@@ -67,7 +68,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
   if (lastIndex < text.length) {
     segments.push(
       <span key="text-end">
-        {text.substring(lastIndex)}
+        <Ansi>{text.substring(lastIndex)}</Ansi>
       </span>
     );
   }
