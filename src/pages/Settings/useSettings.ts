@@ -5,6 +5,10 @@ import {appConfigDir} from '@tauri-apps/api/path'
 import {useServices} from './useServices'
 import {useServicesStatus} from './useServicesStatus'
 import {useProcesses} from './useProcesses'
+
+const isDev = import.meta.env.DEV
+const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
+
 export interface AppSettings {
   servicesPath: string
   justoPath: string
@@ -39,11 +43,11 @@ export function useCreateSettingsContext() {
       }
 
       // Check if settings file exists
-      const settingsExists = await exists('path_settings.json', {baseDir: BaseDirectory.AppConfig})
+      const settingsExists = await exists(settingsPath, {baseDir: BaseDirectory.AppConfig})
 
       if (settingsExists) {
         // Read and parse the settings file
-        const settingsData = await readTextFile('path_settings.json', {
+        const settingsData = await readTextFile(settingsPath, {
           baseDir: BaseDirectory.AppConfig,
         })
         const parsedSettings = JSON.parse(settingsData) as AppSettings
@@ -51,7 +55,7 @@ export function useCreateSettingsContext() {
       } else {
         // Create the settings file with default values if it doesn't exist
         try {
-          await writeTextFile('path_settings.json', JSON.stringify(settings, null, 2), {
+          await writeTextFile(settingsPath, JSON.stringify(settings, null, 2), {
             baseDir: BaseDirectory.AppConfig,
           })
         } catch (writeError) {
@@ -79,7 +83,7 @@ export function useCreateSettingsContext() {
       setIsSaving(true)
       console.log('saving settings', settingsToSave)
       // Save settings to a JSON file in the app's config directory
-      await writeTextFile('path_settings.json', JSON.stringify(settingsToSave, null, 2), {
+      await writeTextFile(settingsPath, JSON.stringify(settingsToSave, null, 2), {
         baseDir: BaseDirectory.AppConfig,
       })
       setIsSaving(false)

@@ -4,6 +4,7 @@ import {AppSettings} from './useSettings'
 import {Button} from '@/components/ui/button'
 import {useSettings} from './Context'
 import {toast} from 'sonner'
+import Updates from './Updates'
 
 export default function Settings() {
   const {settings, setSettings, isSaving, saveSettings} = useSettings()
@@ -54,16 +55,19 @@ export default function Settings() {
           />
         </div>
 
-        <Button
-          onClick={() => {
-            saveSettings()
-            toast.info('Configuraciones guardadas correctamente')
-          }}
-          disabled={isSaving}
-          className="mt-4"
-        >
-          {isSaving ? 'Guardando...' : 'Guadar'}
-        </Button>
+        <div className="space-x-5">
+          <Button
+            onClick={() => {
+              saveSettings()
+              toast.info('Configuraciones guardadas correctamente')
+            }}
+            disabled={isSaving}
+            className="mt-4"
+          >
+            {isSaving ? 'Guardando...' : 'Guadar'}
+          </Button>
+          <Updates />
+        </div>
       </div>
     </PageLayout>
   )
