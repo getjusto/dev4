@@ -7,9 +7,15 @@ import {SettingsContext} from './pages/Settings/Context'
 import {useCreateSettingsContext} from './pages/Settings/useSettings'
 import LoadingFullScreen from './pages/Layout/LoadingFullScreen'
 import Service from './pages/Service'
+import {useEffect} from 'react'
+import {checkForAppUpdates} from './pages/Settings/Updates/check'
 
 function App() {
   const settings = useCreateSettingsContext()
+
+  useEffect(() => {
+    checkForAppUpdates(false)
+  }, [])
 
   if (!settings.loaded) {
     return <LoadingFullScreen />
