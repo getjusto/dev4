@@ -42,7 +42,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
   matches.forEach((match, i) => {
     if (match.index > lastIndex) {
       segments.push(
-        <span key={`text-${i}`} className="inline-block max-w-full">
+        <span key={`text-${i}`}>
           <Ansi>{text.substring(lastIndex, match.index)}</Ansi>
         </span>
       );
@@ -53,7 +53,7 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
       <span 
         key={`match-${i}`}
         className={cn(
-          'search-match bg-yellow-100 text-black px-0.5 inline-block max-w-full',
+          'search-match bg-yellow-100 text-black px-0.5',
           isCurrentMatch && 'current-match bg-yellow-300 font-bold rounded-sm'
         )}
         id={isCurrentMatch ? 'current-search-match' : `search-match-${i}`}
@@ -67,13 +67,13 @@ export const HighlightedText = ({ text, searchQuery, currentMatchIndex }: Highli
   
   if (lastIndex < text.length) {
     segments.push(
-      <span key="text-end" className="inline-block max-w-full">
+      <span key="text-end">
         <Ansi>{text.substring(lastIndex)}</Ansi>
       </span>
     );
   }
   
-  return <div className="w-full whitespace-pre-wrap break-words">{segments}</div>;
+  return <>{segments}</>;
 };
 
 export default HighlightedText;
