@@ -4,34 +4,31 @@ import {invoke} from '@tauri-apps/api/core'
 
 export async function checkForAppUpdates(onUserClick = false) {
   const update = await check()
-  if (update === null) {
-    await message('Failed to check for updates.\nPlease try again later.', {
-      title: 'Error',
-      kind: 'error',
+  if (update === null && onUserClick) {
+    await message('Estás en la última versión.', {
+      title: 'No hay actualizaciones disponibles',
+      kind: 'info',
       okLabel: 'OK',
     })
     return
   }
   if (update?.available) {
-    const yes = await ask(
-      `Update to ${update.version} is available!\n\nRelease notes: ${update.body}`,
-      {
-        title: 'Update Available',
-        kind: 'info',
-        okLabel: 'Update',
-        cancelLabel: 'Cancel',
-      },
-    )
+    const yes = await ask(`¡Actualización a ${update.version} disponible!`, {
+      title: 'Actualización Disponible',
+      kind: 'info',
+      okLabel: 'Actualizar',
+      cancelLabel: 'Cancelar',
+    })
     if (yes) {
       await update.downloadAndInstall()
-      // Restart the app after the update is installed by calling the Tauri command that handles restart for your app
-      // It is good practice to shut down any background processes gracefully before restarting
-      // As an alternative, you could ask the user to restart the app manually
+      // Reiniciar la aplicación después de que la actualización se instale llamando al comando Tauri que maneja el reinicio para tu aplicación
+      // Es una buena práctica cerrar cualquier proceso en segundo plano de manera adecuada antes de reiniciar
+      // Como alternativa, podrías pedir al usuario que reinicie la aplicación manualmente
       await invoke('graceful_restart')
     }
   } else if (onUserClick) {
-    await message('You are on the latest version. Stay awesome!', {
-      title: 'No Update Available',
+    await message('Estás en la última versión.', {
+      title: 'No hay actualizaciones disponibles',
       kind: 'info',
       okLabel: 'OK',
     })
