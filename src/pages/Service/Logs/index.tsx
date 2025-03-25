@@ -207,7 +207,7 @@ export default function Logs(props: Props) {
   }, [currentMatch, searchQuery]);
 
   return (
-    <div className="relative flex flex-1 flex-col h-full w-full">
+    <div className="relative flex flex-1 flex-col h-full w-full max-h-[calc(100vh-64px)] overflow-hidden">
       {/* Search button - show with indicator if there's an active search query */}
       {!searchOpen && (
         <button
@@ -292,7 +292,7 @@ export default function Logs(props: Props) {
       
       <pre
         className={cn(
-          'flex flex-1 flex-col h-full w-full overflow-auto p-5 border-t text-xs',
+          'flex flex-1 flex-col w-full overflow-auto p-5 border-t text-xs',
           'font-mono', 
           props.className,
           {
