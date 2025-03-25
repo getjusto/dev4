@@ -293,7 +293,7 @@ export default function Logs(props: Props) {
       <pre
         className={cn(
           'flex flex-1 flex-col w-full overflow-auto p-5 border-t text-xs',
-          'font-mono', 
+          'font-mono whitespace-pre-wrap break-words', 
           props.className,
           {
             'opacity-50': !service.on,
