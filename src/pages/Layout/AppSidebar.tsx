@@ -64,6 +64,11 @@ export function AppSidebar() {
                     <Link to={`/services/services/${item.name}`}>
                       <ServiceStatusComp service={item} />
                       <span>{item.name}</span>
+                      {item.port && (
+                        <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
+                          {item.port}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -84,6 +89,11 @@ export function AppSidebar() {
                     <Link to={`/services/justo/${item.name}`}>
                       <ServiceStatusComp service={item} />
                       <span>{item.name}</span>
+                      {item.port && (
+                        <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
+                          {item.port}
+                        </span>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -103,6 +113,11 @@ export function AppSidebar() {
                   <Link to={`/services/delivery/${item.name}`}>
                     <ServiceStatusComp service={item} />
                     <span>{item.name}</span>
+                    {item.port && (
+                      <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
+                        {item.port}
+                      </span>
+                    )}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
