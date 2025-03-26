@@ -206,6 +206,23 @@ export default function Logs(props: Props) {
     }
   }, [currentMatch, searchQuery]);
 
+  // Handle ⌘+K (Command+K) to clear output
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        if (service) {
+          processes.resetOutput(service)
+        }
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [service])
+
   return (
     <div className="relative flex flex-1 flex-col h-full w-full max-h-[calc(100vh-64px)] overflow-hidden">
       {/* Search button - show with indicator if there's an active search query */}
