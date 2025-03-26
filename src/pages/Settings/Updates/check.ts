@@ -13,5 +13,10 @@ export async function checkForAppUpdates(onUserClick = false) {
   }
   if (update?.available) {
     await update.downloadAndInstall()
+    await message('Se instaló una actualización. Por favor, reinicia la aplicación.', {
+      title: 'Actualización instalada',
+      kind: 'info',
+      okLabel: 'OK',
+    })
   }
 }
