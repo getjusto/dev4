@@ -4,8 +4,8 @@ import Ansi from 'ansi-to-react'
 import {useEffect, useRef, useState, useCallback} from 'react'
 import {useOnEvent} from 'react-app-events'
 import {cn} from '@/lib/utils'
-import { Search, X, ChevronUp, ChevronDown } from 'lucide-react'
-import HighlightedText, { Match } from '@/components/HighlightedText'
+import {Search, X, ChevronUp, ChevronDown} from 'lucide-react'
+import HighlightedText, {Match} from '@/components/HighlightedText'
 
 interface Props {
   className?: string
@@ -17,22 +17,31 @@ export default function Logs(props: Props) {
   const {processes} = useSettings()
   const container = useRef<HTMLPreElement>(null)
   const [content, setContent] = useState('')
-  
+
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [matches, setMatches] = useState<Match[]>([])
   const [currentMatch, setCurrentMatch] = useState(-1)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const processingKeyRef = useRef(false)
-  
-  useEffect(() => {
-    setContent(processes.outputs[`${category}.${serviceName}`] || '')
+
+  const scrollToBottom = useCallback(() => {
     setTimeout(() => {
       const scrollToBottom = document.getElementById('scroll-to-bottom')
       if (scrollToBottom) {
         scrollToBottom.scrollIntoView({})
       }
     }, 50)
+  }, [])
+
+  // Scroll to bottom on initial mount
+  useEffect(() => {
+    scrollToBottom()
+  }, [])
+
+  useEffect(() => {
+    setContent(processes.outputs[`${category}.${serviceName}`] || '')
+    scrollToBottom()
   }, [`${serviceName}.${category}`])
 
   useOnEvent(`serviceOutput.${service.fullName}`, () => {
@@ -41,12 +50,7 @@ export default function Logs(props: Props) {
     setContent(processes.outputs[`${category}.${serviceName}`] || '')
 
     if (!isAtBottom) return
-    setTimeout(() => {
-      const scrollToBottom = document.getElementById('scroll-to-bottom')
-      if (scrollToBottom) {
-        scrollToBottom.scrollIntoView()
-      }
-    }, 50)
+    scrollToBottom()
   })
 
   const getIsScrolledAtBottom = () => {
@@ -60,151 +64,154 @@ export default function Logs(props: Props) {
     const isAtBottom = scrollHeight - scrollTop - clientHeight < margin
     return isAtBottom
   }
-  
+
   const navigateToNextMatch = useCallback(() => {
     if (matches.length === 0) return
-    
+
     const nextMatch = currentMatch >= matches.length - 1 ? 0 : currentMatch + 1
     setCurrentMatch(nextMatch)
   }, [matches.length, currentMatch])
-  
+
   const navigateToPrevMatch = useCallback(() => {
     if (matches.length === 0) return
-    
+
     const prevMatch = currentMatch <= 0 ? matches.length - 1 : currentMatch - 1
     setCurrentMatch(prevMatch)
   }, [matches.length, currentMatch])
-  
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent | KeyboardEvent) => {    
-    if (processingKeyRef.current) {
-      return;
-    }
-    
-    try {
-      processingKeyRef.current = true;
-      
-      if (searchOpen && matches.length > 0) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          
-          if (e.shiftKey) {
-            navigateToPrevMatch();
-          } else {
-            navigateToNextMatch();
+
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent | KeyboardEvent) => {
+      if (processingKeyRef.current) {
+        return
+      }
+
+      try {
+        processingKeyRef.current = true
+
+        if (searchOpen && matches.length > 0) {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+
+            if (e.shiftKey) {
+              navigateToPrevMatch()
+            } else {
+              navigateToNextMatch()
+            }
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            navigateToNextMatch()
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            navigateToPrevMatch()
           }
-        } else if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          navigateToNextMatch();
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          navigateToPrevMatch();
         }
+
+        if (e.key === 'Escape' && searchOpen) {
+          e.preventDefault()
+          setSearchOpen(false)
+        }
+      } finally {
+        setTimeout(() => {
+          processingKeyRef.current = false
+        }, 50)
       }
-      
-      if (e.key === 'Escape' && searchOpen) {
-        e.preventDefault();
-        setSearchOpen(false);
-      }
-    } finally {
-      setTimeout(() => {
-        processingKeyRef.current = false;
-      }, 50);
-    }
-  }, [searchOpen, matches.length, navigateToNextMatch, navigateToPrevMatch]);
-  
+    },
+    [searchOpen, matches.length, navigateToNextMatch, navigateToPrevMatch],
+  )
+
   const focusAndSelectSearchInput = useCallback(() => {
     setTimeout(() => {
       if (searchInputRef.current) {
-        searchInputRef.current.focus();
+        searchInputRef.current.focus()
         if (searchQuery) {
-          searchInputRef.current.select();
+          searchInputRef.current.select()
         }
       }
-    }, 50);
-  }, [searchQuery]);
-  
+    }, 50)
+  }, [searchQuery])
+
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        setSearchOpen(true);
-        focusAndSelectSearchInput();
-        return;
+        e.preventDefault()
+        setSearchOpen(true)
+        focusAndSelectSearchInput()
+        return
       }
-      
+
       if (searchOpen && e.key === 'Escape') {
-        e.preventDefault();
-        setSearchOpen(false);
-        return;
+        e.preventDefault()
+        setSearchOpen(false)
+        return
       }
-      
+
       if (document.activeElement === searchInputRef.current) {
-        return;
+        return
       }
-    };
-    
-    document.addEventListener('keydown', handleGlobalKeyDown, { capture: true });
+    }
+
+    document.addEventListener('keydown', handleGlobalKeyDown, {capture: true})
     return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown, { capture: true });
-    };
-  }, [searchOpen, handleSearchKeyDown, focusAndSelectSearchInput]);
-  
+      document.removeEventListener('keydown', handleGlobalKeyDown, {capture: true})
+    }
+  }, [searchOpen, handleSearchKeyDown, focusAndSelectSearchInput])
+
   useEffect(() => {
     if (!searchQuery || !container.current) {
       setMatches([])
       setCurrentMatch(-1)
       return
     }
-    
-    const safeSearchQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(safeSearchQuery, 'gi');
-    const foundMatches: Match[] = [];
-    
-    let match = regex.exec(content);
+
+    const safeSearchQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(safeSearchQuery, 'gi')
+    const foundMatches: Match[] = []
+
+    let match = regex.exec(content)
     while (match !== null) {
       foundMatches.push({
         text: match[0],
-        index: match.index
-      });
-      
+        index: match.index,
+      })
+
       if (match.index === regex.lastIndex) {
-        regex.lastIndex++;
+        regex.lastIndex++
       }
-      
-      match = regex.exec(content);
+
+      match = regex.exec(content)
     }
-        
-    setMatches(foundMatches);
-    setCurrentMatch(foundMatches.length > 0 ? 0 : -1);
-  }, [searchQuery, content]);
-  
+
+    setMatches(foundMatches)
+    setCurrentMatch(foundMatches.length > 0 ? 0 : -1)
+  }, [searchQuery, content])
+
   useEffect(() => {
     if (currentMatch >= 0 && matches.length > 0) {
     }
-  }, [currentMatch, matches]);
-  
+  }, [currentMatch, matches])
+
   useEffect(() => {
     if (currentMatch >= 0 && searchQuery) {
       setTimeout(() => {
-        const currentMatchElement = document.getElementById('current-search-match');
+        const currentMatchElement = document.getElementById('current-search-match')
         if (currentMatchElement) {
           currentMatchElement.scrollIntoView({
             behavior: 'smooth',
-            block: 'center'
-          });
-          
-          currentMatchElement.classList.add('flash-highlight');
+            block: 'center',
+          })
+
+          currentMatchElement.classList.add('flash-highlight')
           setTimeout(() => {
-            currentMatchElement.classList.remove('flash-highlight');
-          }, 500);
-          
-          searchInputRef.current?.focus();
+            currentMatchElement.classList.remove('flash-highlight')
+          }, 500)
+
+          searchInputRef.current?.focus()
         } else {
-          console.warn('Could not find current match element');
+          console.warn('Could not find current match element')
         }
-      }, 50);
+      }, 50)
     }
-  }, [currentMatch, searchQuery]);
+  }, [currentMatch, searchQuery])
 
   // Handle ⌘+K (Command+K) to clear output
   useEffect(() => {
@@ -216,7 +223,7 @@ export default function Logs(props: Props) {
         }
       }
     }
-    
+
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
@@ -230,21 +237,25 @@ export default function Logs(props: Props) {
         <button
           type="button"
           onClick={() => {
-            setSearchOpen(true);
-            focusAndSelectSearchInput();
+            setSearchOpen(true)
+            focusAndSelectSearchInput()
           }}
           className={cn(
-            "absolute top-3 right-3 p-1 rounded-md z-10 flex items-center gap-1 text-xs transition-colors",
-            searchQuery ? "bg-yellow-100 text-black hover:bg-yellow-200" : "bg-muted/80 text-muted-foreground hover:bg-muted"
+            'absolute top-3 right-3 p-1 rounded-md z-10 flex items-center gap-1 text-xs transition-colors',
+            searchQuery
+              ? 'bg-yellow-100 text-black hover:bg-yellow-200'
+              : 'bg-muted/80 text-muted-foreground hover:bg-muted',
           )}
         >
           <Search size={14} />
           <span className="hidden sm:inline">
-            {searchQuery ? `"${searchQuery.length > 10 ? `${searchQuery.substring(0, 10)}...` : searchQuery}" (${matches.length})` : 'Search logs'}
+            {searchQuery
+              ? `"${searchQuery.length > 10 ? `${searchQuery.substring(0, 10)}...` : searchQuery}" (${matches.length})`
+              : 'Search logs'}
           </span>
         </button>
       )}
-      
+
       {/* Search bar */}
       {searchOpen && (
         <div className="absolute top-3 right-3 z-20 flex items-center gap-2 bg-muted rounded-md p-1 border shadow-sm">
@@ -256,36 +267,41 @@ export default function Logs(props: Props) {
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search logs..."
             className="bg-transparent border-none outline-none text-xs w-32 sm:w-48"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                handleSearchKeyDown(e);
+            onKeyDown={e => {
+              if (
+                e.key === 'Enter' ||
+                e.key === 'ArrowUp' ||
+                e.key === 'ArrowDown' ||
+                e.key === 'Escape'
+              ) {
+                e.preventDefault()
+                e.stopPropagation()
+
+                handleSearchKeyDown(e)
               }
             }}
           />
-          
+
           {/* Match navigation */}
           {matches.length > 0 && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <span>{`${currentMatch + 1}/${matches.length}`}</span>
               <div className="flex flex-col">
-                <button 
+                <button
                   type="button"
                   onClick={() => {
-                    navigateToPrevMatch();
-                    searchInputRef.current?.focus();
+                    navigateToPrevMatch()
+                    searchInputRef.current?.focus()
                   }}
                   className="p-0.5"
                 >
                   <ChevronUp size={12} />
                 </button>
-                <button 
+                <button
                   type="button"
                   onClick={() => {
-                    navigateToNextMatch();
-                    searchInputRef.current?.focus();
+                    navigateToNextMatch()
+                    searchInputRef.current?.focus()
                   }}
                   className="p-0.5"
                 >
@@ -294,11 +310,11 @@ export default function Logs(props: Props) {
               </div>
             </div>
           )}
-          
+
           <button
             type="button"
             onClick={() => {
-              setSearchOpen(false);
+              setSearchOpen(false)
             }}
             className="p-1 hover:bg-muted-foreground/20 rounded-sm"
           >
@@ -306,11 +322,11 @@ export default function Logs(props: Props) {
           </button>
         </div>
       )}
-      
+
       <pre
         className={cn(
           'flex flex-1 flex-col w-full overflow-auto p-5 border-t text-xs',
-          'font-mono whitespace-pre-wrap break-words', 
+          'font-mono whitespace-pre-wrap break-words',
           props.className,
           {
             'opacity-50': !service.on,
@@ -321,10 +337,10 @@ export default function Logs(props: Props) {
       >
         {searchOpen && searchQuery ? (
           <div id="highlighted-content" className="w-full whitespace-pre-wrap break-words">
-            <HighlightedText 
-              text={content} 
-              searchQuery={searchQuery} 
-              currentMatchIndex={currentMatch} 
+            <HighlightedText
+              text={content}
+              searchQuery={searchQuery}
+              currentMatchIndex={currentMatch}
             />
           </div>
         ) : (
