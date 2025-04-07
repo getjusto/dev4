@@ -15,12 +15,57 @@ import {Button} from '@/components/ui/button'
 import {Code, Trash} from 'lucide-react'
 import {cn} from '@/lib/utils'
 import {Command} from '@tauri-apps/plugin-shell'
+import {useProvideCommands} from '../Layout/CommandBar/Context'
 
 export default function Service() {
-  const {processes} = useSettings()
+  const {processes, setServiceOn, status: allStatus} = useSettings()
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const [tab, setTab] = useState<'logs' | 'terminal'>('logs')
+  const currentStatus = allStatus[`${category}.${serviceName}`]
+
+  useProvideCommands([
+    {
+      title: 'Ver logs',
+      action: () => {
+        setTab('logs')
+      },
+      defaultScore: 2,
+      category: 'Servicio actual',
+      dependencies: [serviceName],
+      hotkeys: ['mod+1'],
+    },
+    {
+      title: 'Abrir terminal',
+      defaultScore: 2,
+      action: () => {
+        setTab('terminal')
+      },
+      category: 'Servicio actual',
+      dependencies: [serviceName],
+      hotkeys: ['mod+2'],
+    },
+    {
+      title: currentStatus === 'off' ? 'Prender servicio' : 'Apagar servicio',
+      action: () => {
+        setServiceOn(category, serviceName, currentStatus === 'off')
+      },
+      category: 'Servicio actual',
+      dependencies: [serviceName, currentStatus],
+      hotkeys: ['mod+o'],
+    },
+    {
+      title: 'Abrir en cursor',
+      action: async () => {
+        await Command.create('/bin/zsh', ['-l', '-c', 'cursor .'], {
+          cwd: service.path,
+        }).execute()
+      },
+      category: 'Servicio actual',
+      dependencies: [serviceName],
+      hotkeys: ['mod+p'],
+    },
+  ])
 
   if (!service) {
     return <div>Service not found</div>

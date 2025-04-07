@@ -12,12 +12,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import {Link, useLocation} from 'react-router-dom'
+import {Link, useLocation, useNavigate} from 'react-router-dom'
 import {H4} from '@/components/ui/typography'
 import {useSettings} from '../Settings/Context'
 import {ServiceData} from '../Settings/useServices'
 import {cn} from '@/lib/utils'
 import {SwitchSmall} from '@/components/ui/switch-small'
+import CommandsButton from './CommandsButton'
+import {useProvideCommands} from './CommandBar/Context'
 
 function ServiceStatusComp({service}: {service: ServiceData}) {
   const {status: allStatus, setServiceOn} = useSettings()
@@ -39,6 +41,19 @@ function ServiceStatusComp({service}: {service: ServiceData}) {
 export function AppSidebar() {
   const {services} = useSettings()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const allServices = [...services.servicesList, ...services.justoList, ...services.deliveryList]
+  useProvideCommands(
+    allServices.map(service => ({
+      title: `Entrar a ${service.name}`,
+      action: () => {
+        navigate(`/services/${service.category}/${service.name}`)
+      },
+      category: 'Servicios',
+      dependencies: [],
+    })),
+  )
 
   return (
     <Sidebar>
@@ -49,6 +64,7 @@ export function AppSidebar() {
             Justo Dev4
           </H4>
         </Link>
+        <CommandsButton />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

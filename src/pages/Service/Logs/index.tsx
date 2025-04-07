@@ -6,6 +6,7 @@ import {useOnEvent} from 'react-app-events'
 import {cn} from '@/lib/utils'
 import {Search, X, ChevronUp, ChevronDown} from 'lucide-react'
 import HighlightedText, {Match} from '@/components/HighlightedText'
+import {useProvideCommand} from '@/pages/Layout/CommandBar/Context'
 
 interface Props {
   className?: string
@@ -213,22 +214,18 @@ export default function Logs(props: Props) {
     }
   }, [currentMatch, searchQuery])
 
-  // Handle ⌘+K (Command+K) to clear output
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        if (service) {
-          processes.resetOutput(service)
-        }
+  useProvideCommand({
+    title: 'Limpiar logs',
+    action: () => {
+      if (service) {
+        processes.resetOutput(service)
       }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [service])
+    },
+    category: 'Servicio actual',
+    defaultScore: 1.9,
+    dependencies: [serviceName],
+    hotkeys: ['mod+l'],
+  })
 
   return (
     <div className="relative flex flex-1 flex-col h-full w-full max-h-[calc(100vh-64px)] overflow-hidden">
