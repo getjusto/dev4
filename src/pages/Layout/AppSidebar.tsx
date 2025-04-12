@@ -46,7 +46,7 @@ export function AppSidebar() {
   const allServices = [...services.servicesList, ...services.justoList, ...services.deliveryList]
   useProvideCommands(
     allServices.map(service => ({
-      title: `Entrar a ${service.name}`,
+      title: `Entrar a ${service.category} ${service.name}`,
       action: () => {
         navigate(`/services/${service.category}/${service.name}`)
       },
