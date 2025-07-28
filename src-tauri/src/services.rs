@@ -206,9 +206,18 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
         processes.add_output(&service.full_name, &format!("Starting {} service...\n", service.name));
     }
     
-    // Start with tokio::process for better async handling
-    let mut tokio_child = TokioCommand::new(command)
-        .args(&args)
+    // Build the command string
+    let command_string = if args.is_empty() {
+        command.to_string()
+    } else {
+        format!("{} {}", command, args.join(" "))
+    };
+    
+    // Start with tokio::process using user's login shell to load environment
+    let mut tokio_child = TokioCommand::new("/bin/zsh")
+        .arg("-l")  // Login shell - loads user environment
+        .arg("-c")
+        .arg(&command_string)
         .current_dir(&service.path)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
