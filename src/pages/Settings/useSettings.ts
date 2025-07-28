@@ -2,6 +2,7 @@ import {useState, useEffect} from 'react'
 import {exists, BaseDirectory, readTextFile, writeTextFile, mkdir} from '@tauri-apps/plugin-fs'
 import {toast} from 'sonner'
 import {appConfigDir} from '@tauri-apps/api/path'
+import {invoke} from '@tauri-apps/api/core'
 import {useServices} from './useServices'
 import {useServicesStatus} from './useServicesStatus'
 import {useProcesses} from './useProcesses'
@@ -108,6 +109,52 @@ export function useCreateSettingsContext() {
       saveSettings(newSettings)
       return newSettings
     })
+
+    // Trigger service management to start/stop services as needed
+    try {
+      const allServices = [
+        ...services.servicesList,
+        ...services.justoList,
+        ...services.deliveryList,
+      ]
+      
+      // Update the specific service's 'on' state in the list
+      const updatedServices = allServices.map(s => {
+        if (s.fullName === `${category}.${service}`) {
+          return { ...s, on }
+        }
+        return s
+      })
+      
+      // Convert to Rust format
+      const rustServices = updatedServices.map(service => ({
+        name: service.name,
+        path: service.path,
+        port: service.port,
+        full_name: service.fullName,
+        on: service.on,
+        category: service.category,
+        config: service.config,
+        start_command: service.startCommand,
+      }))
+
+      const actions = await invoke<string[]>('ensure_services_running', {
+        services: rustServices,
+      })
+      
+      console.log('Service management actions:', actions)
+      
+      if (actions.length > 0) {
+        toast.success('Service management completed', {
+          description: actions.join(', '),
+        })
+      }
+    } catch (error) {
+      console.error('Failed to manage services:', error)
+      toast.error('Failed to manage services', {
+        description: `${error}`,
+      })
+    }
   }
 
   const status = useServicesStatus(services)

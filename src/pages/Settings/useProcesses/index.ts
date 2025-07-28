@@ -1,136 +1,72 @@
-import {useEffect, useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {ServiceData} from '../useServices'
-import {Command, Child} from '@tauri-apps/plugin-shell'
+import {invoke} from '@tauri-apps/api/core'
 import {fireEvent} from 'react-app-events'
 import {WebviewWindow} from '@tauri-apps/api/webviewWindow'
 
 export function useProcesses(services: ServiceData[]) {
-  const processes = useRef<Record<string, Child>>({}).current
   const outputs = useRef<Record<string, string>>({}).current
+  const [, setUpdateCounter] = useState(0)
+
+  const forceUpdate = () => setUpdateCounter(prev => prev + 1)
 
   const addContent = (service: ServiceData, content: string) => {
-    outputs[service.fullName] = `${outputs[service.fullName] || ''}${content}`
-    // strip to 1000 lines
-    outputs[service.fullName] = outputs[service.fullName].split('\n').slice(-1000).join('\n')
-
+    outputs[service.fullName] = content
     setTimeout(() => {
       fireEvent(`serviceOutput.${service.fullName}`, {})
     }, 100)
   }
 
-  const resetOutput = (service: ServiceData) => {
-    outputs[service.fullName] = ''
-    addContent(service, '')
-  }
-
-  const startService = async (service: ServiceData) => {
-    if (processes[service.fullName]) {
-      return
-    }
-
-    console.log(`starting ${service.fullName}`)
-    resetOutput(service)
-
-    const commands = ['-l', '-c', `${service.startCommand}`]
-    console.log('commands', commands.join(' '))
-    const command = Command.create('/bin/zsh', commands, {
-      cwd: service.path,
-    })
-
-    command.stdout.on('data', data => {
-      addContent(service, data)
-    })
-    command.stderr.on('data', data => {
-      addContent(service, data)
-    })
-
-    command.on('close', data => {
-      addContent(service, `command finished with code ${data.code} and signal ${data.signal}\n\n`)
-    })
-    command.on('error', error => {
-      console.error(`command error: "${error}"`)
-      addContent(service, `command error: "${error}"`)
-    })
-
-    processes[service.fullName] = await command.spawn()
-    console.log(`started ${service.fullName}`, {pid: processes[service.fullName].pid})
-  }
-
-  const stopService = async (service: ServiceData) => {
+  const resetOutput = async (service: ServiceData) => {
     try {
-      if (!processes[service.fullName]) {
-        return
-      }
-
-      console.log(`stopping ${service.fullName}`)
-
-      const pid = processes[service.fullName].pid
-      const {stdout: processList} = await Command.create('ps', [
-        '-axco',
-        'pid,ppid,command',
-      ]).execute()
-      const processListArray = processList.split('\n').map(line => {
-        const [pid, ppid, command] = line.split(' ')
-        return {pid: Number(pid), ppid: Number(ppid), command}
+      await invoke('clear_service_output', {
+        serviceName: service.fullName,
       })
-      const getChildrenTree = (pid: number) => {
-        return [
-          ...processListArray.filter(line => line.ppid === pid).map(p => p.pid),
-          ...processListArray
-            .filter(line => line.ppid === pid)
-            .flatMap(child => getChildrenTree(child.pid))
-            .filter(Boolean),
-        ]
-      }
-
-      const childrenPids = getChildrenTree(pid)
-
-      console.log(`stopping ${service.fullName}`, {
-        pid,
-        children: childrenPids,
-      })
-
-      const killResult = await Command.create('kill-process', ['-9', pid.toString()]).execute()
-      console.log('killResult', {killResult, pid, serviceName: service.fullName})
-
-      for (const childPid of childrenPids) {
-        const killResult = await Command.create('kill-process', [
-          '-9',
-          childPid.toString(),
-        ]).execute()
-        console.log('killResult', {killResult, childPid, pid, serviceName: service.fullName})
-      }
-
-      // await processes[service.fullName].kill()
-      resetOutput(service)
-      console.log(`stopped ${service.fullName}`)
-
-      delete processes[service.fullName]
+      outputs[service.fullName] = ''
+      addContent(service, '')
     } catch (error) {
-      console.error(`error stopping ${service.fullName}:`, error)
+      console.error('Failed to clear service output:', error)
     }
   }
 
-  const ensureServicesRunning = async () => {
-    for (const service of services) {
-      if (service.on) {
-        await startService(service)
-      }
-      if (!service.on) {
-        await stopService(service)
+  // Poll for service output updates
+  useEffect(() => {
+    const pollOutputs = async () => {
+      for (const service of services) {
+        try {
+          const output = await invoke<string>('get_service_output', {
+            serviceName: service.fullName,
+          })
+          
+          if (outputs[service.fullName] !== output) {
+            outputs[service.fullName] = output
+            fireEvent(`serviceOutput.${service.fullName}`, {})
+          }
+        } catch (error) {
+          console.error(`Failed to get output for ${service.fullName}:`, error)
+        }
       }
     }
-  }
+
+    // Initial load
+    pollOutputs()
+
+    // Set up polling interval
+    const interval = setInterval(pollOutputs, 1000) // Poll every second
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [JSON.stringify(services.map(s => s.fullName))])
 
   useEffect(() => {
-    ensureServicesRunning()
-
     let unlisten: () => void
     WebviewWindow.getCurrent()
       .onCloseRequested(async event => {
         event.preventDefault()
         console.log('close requested')
-        await Promise.all(services.map(service => stopService(service)))
+        // Services are now managed by Rust, so we don't need to stop them manually here
+        // The Rust exit handler will take care of it
         setTimeout(() => {
           WebviewWindow.getCurrent().destroy()
         }, 500)
@@ -139,23 +75,13 @@ export function useProcesses(services: ServiceData[]) {
         unlisten = un
       })
 
-    // you need to call unlisten if your handler goes out of scope e.g. the component is unmounted
-
     return () => {
       unlisten?.()
-    }
-  }, [JSON.stringify(services)])
-
-  useEffect(() => {
-    return () => {
-      for (const service of services) {
-        stopService(service)
-      }
     }
   }, [])
 
   return {
-    processes,
+    processes: {}, // No longer tracking processes in frontend
     outputs,
     resetOutput,
   }

@@ -1,6 +1,9 @@
 import {useParams} from 'react-router-dom'
+import {useServiceData, useSettings} from '../Settings/Context'
+import {Button} from '@/components/ui/button'
+import {Code, Terminal, Trash} from 'lucide-react'
+import {Command} from '@tauri-apps/plugin-shell'
 import {useState} from 'react'
-import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,21 +11,16 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import {useServiceData, useSettings} from '../Settings/Context'
-import Logs from './Logs'
-import Terminal from './Terminal'
-import {Button} from '@/components/ui/button'
-import {Code, Trash} from 'lucide-react'
-import {cn} from '@/lib/utils'
-import {Command} from '@tauri-apps/plugin-shell'
 import {useProvideCommands} from '../Layout/CommandBar/Context'
+import Logs from './Logs'
+import {openNativeTerminal} from '@/lib/openTerminal'
 
 export default function Service() {
-  const {processes, setServiceOn, status: allStatus} = useSettings()
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
-  const [tab, setTab] = useState<'logs' | 'terminal'>('logs')
-  const currentStatus = allStatus[`${category}.${serviceName}`]
+  const {setServiceOn, status: allStatus, processes} = useSettings()
+  const [tab, setTab] = useState<'logs'>('logs') // Only logs tab now
+  const currentStatus = allStatus[`${category}.${serviceName}`] || 'off'
 
   useProvideCommands([
     {
@@ -36,10 +34,14 @@ export default function Service() {
       hotkeys: ['mod+1'],
     },
     {
-      title: 'Abrir terminal',
+      title: 'Abrir terminal nativo',
       defaultScore: 2,
-      action: () => {
-        setTab('terminal')
+      action: async () => {
+        try {
+          await openNativeTerminal(service.path)
+        } catch (error) {
+          console.error('Failed to open native terminal:', error)
+        }
       },
       category: 'Servicio actual',
       dependencies: [serviceName],
@@ -57,7 +59,7 @@ export default function Service() {
     {
       title: 'Abrir en cursor',
       action: async () => {
-        await Command.create('/bin/zsh', ['-l', '-c', 'cursor .'], {
+        await Command.create('zsh', ['-l', '-c', 'cursor .'], {
           cwd: service.path,
         }).execute()
       },
@@ -77,10 +79,6 @@ export default function Service() {
         className="flex justify-between items-center space-x-2 p-5 bg-sidebar"
         data-tauri-drag-region
       >
-        {/* <Switch
-          checked={service.on}
-          onCheckedChange={(checked: boolean) => setServiceOn(category, serviceName, checked)}
-        /> */}
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -107,7 +105,7 @@ export default function Service() {
           variant="outline"
           size="sm"
           onClick={async () => {
-            await Command.create('/bin/zsh', ['-l', '-c', 'cursor .'], {
+            await Command.create('zsh', ['-l', '-c', 'cursor .'], {
               cwd: service.path,
             }).execute()
           }}
@@ -115,24 +113,24 @@ export default function Service() {
           <Code className="w-4 h-4" />
         </Button>
 
-        <Tabs
-          className=""
-          onValueChange={(newTab: 'logs' | 'terminal') => setTab(newTab)}
-          value={tab}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            try {
+              await openNativeTerminal(service.path)
+            } catch (error) {
+              console.error('Failed to open native terminal:', error)
+            }
+          }}
+          title="Open native terminal (Warp or Terminal)"
         >
-          <TabsList>
-            <TabsTrigger value="logs">Logs</TabsTrigger>
-            <TabsTrigger value="terminal">Terminal</TabsTrigger>
-          </TabsList>
-        </Tabs>
+         <Terminal className="w-4 h-4" />
+        </Button>
       </div>
-      <Logs
-        className={cn({
-          '': tab === 'logs',
-          hidden: tab !== 'logs',
-        })}
-      />
-      <Terminal hidden={tab !== 'terminal'} />
+      
+      {/* Only show Logs component since we removed the embedded terminal */}
+      <Logs />
     </div>
   )
 }

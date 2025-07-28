@@ -6,6 +6,9 @@ alwaysApply: true
 
 You are a senior TypeScript programmer with a preference for clean programming and design patterns.
 
+This app is a microservice runner for a company for developing. 
+Each service is a nodejs local server.
+
 Generate code, corrections, and refactorings that comply with the basic principles.
 
 This is a Tauri 2.0 Project
@@ -17,6 +20,8 @@ This project uses shadcn
 This project uses tailwindcss 4
 
 If you need to check if something has errors, do not try to run the app. Just ask me to try it
+
+NEVER run the app. Just ask me to try it.
 
 ### Basic Principles
 
