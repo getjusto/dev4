@@ -48,8 +48,8 @@ importers:
         specifier: ~2
         version: 2.3.1
       '@tauri-apps/plugin-opener':
-        specifier: ^2
-        version: 2.2.6
+        specifier: ^2.4.0
+        version: 2.4.0
       '@tauri-apps/plugin-os':
         specifier: ~2
         version: 2.2.1
@@ -62,15 +62,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: ~2.6.1
         version: 2.6.1
-      '@xterm/addon-fit':
-        specifier: ^0.10.0
-        version: 0.10.0(@xterm/xterm@5.5.0)
-      '@xterm/addon-web-links':
-        specifier: ^0.11.0
-        version: 0.11.0(@xterm/xterm@5.5.0)
-      '@xterm/xterm':
-        specifier: ^5.5.0
-        version: 5.5.0
       ansi-to-react:
         specifier: ^6.1.6
         version: 6.1.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -86,6 +77,9 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@18.3.5(@types/react@18.3.19))(@types/react@18.3.19)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
       lucide-react:
         specifier: ^0.483.0
         version: 0.483.0(react@18.3.1)
@@ -116,9 +110,6 @@ importers:
       tailwind-merge:
         specifier: ^3.0.2
         version: 3.0.2
-      tauri-pty:
-        specifier: ^0.1.0
-        version: 0.1.0
       tw-animate-css:
         specifier: ^1.2.4
         version: 1.2.4
@@ -132,6 +123,9 @@ importers:
       '@tauri-apps/cli':
         specifier: ^2
         version: 2.4.0
+      '@types/lodash-es':
+        specifier: ^4.17.12
+        version: 4.17.12
       '@types/node':
         specifier: ^22.13.11
         version: 22.13.11
@@ -939,11 +933,11 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6
 
-  '@tauri-apps/api@2.3.0':
-    resolution: {integrity: sha512-33Z+0lX2wgZbx1SPFfqvzI6su63hCBkbzv+5NexeYjIx7WA9htdOKoRR7Dh3dJyltqS5/J8vQFyybiRoaL0hlA==}
-
   '@tauri-apps/api@2.4.0':
     resolution: {integrity: sha512-F1zXTsmwcCp+ocg6fbzD/YL0OHeSG1eynCag1UNlX2tD5+dlXy7eRbTu9cAcscPjcR7Nix7by2wiv/+VfWUieg==}
+
+  '@tauri-apps/api@2.7.0':
+    resolution: {integrity: sha512-v7fVE8jqBl8xJFOcBafDzXFc8FnicoH3j8o8DNNs0tHuEBmXUDqrCOAzMRX0UkfpwqZLqvrvK0GNQ45DfnoVDg==}
 
   '@tauri-apps/cli-darwin-arm64@2.4.0':
     resolution: {integrity: sha512-MVzYrahJBgDyzUJ2gNEU8H+0oCVEucN115+CVorFnidHcJ6DtDRMCaKLkpjOZNfJyag1WQ25fu7imvZSe0mz/g==}
@@ -1028,8 +1022,8 @@ packages:
   '@tauri-apps/plugin-log@2.3.1':
     resolution: {integrity: sha512-nnKGHENWt7teqvUlIKxd6bp2wCUrrLvCvajN6CWbyrHBNKPi/pyKELzD511siEMDEdndbiZ/GEhiK0xBtZopRg==}
 
-  '@tauri-apps/plugin-opener@2.2.6':
-    resolution: {integrity: sha512-bSdkuP71ZQRepPOn8BOEdBKYJQvl6+jb160QtJX/i2H9BF6ZySY/kYljh76N2Ne5fJMQRge7rlKoStYQY5Jq1w==}
+  '@tauri-apps/plugin-opener@2.4.0':
+    resolution: {integrity: sha512-43VyN8JJtvKWJY72WI/KNZszTpDpzHULFxQs0CJBIYUdCRowQ6Q1feWTDb979N7nldqSuDOaBupZ6wz2nvuWwQ==}
 
   '@tauri-apps/plugin-os@2.2.1':
     resolution: {integrity: sha512-cNYpNri2CCc6BaNeB6G/mOtLvg8dFyFQyCUdf2y0K8PIAKGEWdEcu8DECkydU2B+oj4OJihDPD2de5K6cbVl9A==}
@@ -1064,6 +1058,12 @@ packages:
   '@types/hast@2.3.10':
     resolution: {integrity: sha512-McWspRw8xx8J9HurkVBfYj0xKoE25tOFlHGdx4MJ5xORQrMGZNqJhVQWaIbm6Oyla5kYOXtDiopzKRJzEOkwJw==}
 
+  '@types/lodash-es@4.17.12':
+    resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
+
   '@types/node@22.13.11':
     resolution: {integrity: sha512-iEUCUJoU0i3VnrCmgoWCXttklWcvoCIx4jzcP22fioIVSdTmjgoEvmAO/QPw6TcS9k5FrNgn4w7q5lGOd1CT5g==}
 
@@ -1089,19 +1089,6 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
-
-  '@xterm/addon-fit@0.10.0':
-    resolution: {integrity: sha512-UFYkDm4HUahf2lnEyHvio51TNGiLK66mqP2JoATy7hRZeXaGMRDr00JiSF7m63vR5WKATF605yEggJKsw0JpMQ==}
-    peerDependencies:
-      '@xterm/xterm': ^5.0.0
-
-  '@xterm/addon-web-links@0.11.0':
-    resolution: {integrity: sha512-nIHQ38pQI+a5kXnRaTgwqSHnX7KE6+4SVoceompgHL26unAxdfP6IPqUTSYPQgSwM56hsElfoNrrW5V7BUED/Q==}
-    peerDependencies:
-      '@xterm/xterm': ^5.0.0
-
-  '@xterm/xterm@5.5.0':
-    resolution: {integrity: sha512-hqJHYaQb5OptNunnyAnkHyM8aCjZ1MEIDTQu1iIbbTD/xops91NB5yq1ZK/dC2JDbVWtF23zUtl9JE2NqwT87A==}
 
   anser@1.4.10:
     resolution: {integrity: sha512-hCv9AqTQ8ycjpSd3upOJd7vFwW1JaoYQ7tpham03GJ1ca8/65rqn0RpaWpItOAd6ylW9wAw6luXYPJIyPFVOww==}
@@ -1418,6 +1405,9 @@ packages:
     resolution: {integrity: sha512-6b6gd/RUXKaw5keVdSEtqFVdzWnU5jMxTUjA2bVcMNPLwSQ08Sv/UodBVtETLCn7k4S1Ibxwh7k68IwLZPgKaA==}
     engines: {node: '>= 12.0.0'}
 
+  lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+
   loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
@@ -1609,9 +1599,6 @@ packages:
   tapable@2.2.1:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
-
-  tauri-pty@0.1.0:
-    resolution: {integrity: sha512-RkswxIfW5cfZFF4hH5mPENqZ3GkXbEAj/dJ7BgSbFGzRGasUSdWuZMHFJhKmREYFPUBi4z38V1mwOCMWKr0h/g==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -2366,9 +2353,9 @@ snapshots:
       tailwindcss: 4.0.15
       vite: 6.2.2(@types/node@22.13.11)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0)
 
-  '@tauri-apps/api@2.3.0': {}
-
   '@tauri-apps/api@2.4.0': {}
+
+  '@tauri-apps/api@2.7.0': {}
 
   '@tauri-apps/cli-darwin-arm64@2.4.0':
     optional: true
@@ -2433,9 +2420,9 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.4.0
 
-  '@tauri-apps/plugin-opener@2.2.6':
+  '@tauri-apps/plugin-opener@2.4.0':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.7.0
 
   '@tauri-apps/plugin-os@2.2.1':
     dependencies:
@@ -2482,6 +2469,12 @@ snapshots:
     dependencies:
       '@types/unist': 2.0.11
 
+  '@types/lodash-es@4.17.12':
+    dependencies:
+      '@types/lodash': 4.17.20
+
+  '@types/lodash@4.17.20': {}
+
   '@types/node@22.13.11':
     dependencies:
       undici-types: 6.20.0
@@ -2513,16 +2506,6 @@ snapshots:
       vite: 6.2.2(@types/node@22.13.11)(jiti@2.4.2)(lightningcss@1.29.2)(yaml@2.7.0)
     transitivePeerDependencies:
       - supports-color
-
-  '@xterm/addon-fit@0.10.0(@xterm/xterm@5.5.0)':
-    dependencies:
-      '@xterm/xterm': 5.5.0
-
-  '@xterm/addon-web-links@0.11.0(@xterm/xterm@5.5.0)':
-    dependencies:
-      '@xterm/xterm': 5.5.0
-
-  '@xterm/xterm@5.5.0': {}
 
   anser@1.4.10: {}
 
@@ -2817,6 +2800,8 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.29.2
       lightningcss-win32-x64-msvc: 1.29.2
 
+  lodash-es@4.17.21: {}
+
   loose-envify@1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -3010,10 +2995,6 @@ snapshots:
   tailwindcss@4.0.15: {}
 
   tapable@2.2.1: {}
-
-  tauri-pty@0.1.0:
-    dependencies:
-      '@tauri-apps/api': 2.3.0
 
   tslib@2.8.1: {}
 
