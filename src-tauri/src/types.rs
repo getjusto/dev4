@@ -21,10 +21,11 @@ impl ServiceProcesses {
         let current_output = self.outputs.entry(service_name.to_string()).or_insert_with(String::new);
         current_output.push_str(content);
         
-        // Keep only last 1000 lines to prevent memory issues
+        // Keep only last 5000 lines to prevent memory issues
         let lines: Vec<&str> = current_output.lines().collect();
-        if lines.len() > 1000 {
-            *current_output = lines[lines.len() - 1000..].join("\n");
+        if lines.len() > 5000 {
+            // Join lines and add final newline to preserve formatting
+            *current_output = format!("{}\n", lines[lines.len() - 5000..].join("\n"));
         }
     }
     
