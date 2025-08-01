@@ -59,9 +59,19 @@ export default function Service() {
     {
       title: 'Abrir en cursor',
       action: async () => {
-        await Command.create('zsh', ['-l', '-c', 'cursor .'], {
-          cwd: service.path,
-        }).execute()
+        try {
+          await Command.create('open', ['-a', 'Cursor', service.path]).execute()
+        } catch (error) {
+          console.error('Failed to open Cursor:', error)
+          // Fallback to the old method if Cursor app is not found
+          try {
+            await Command.create('zsh', ['-l', '-c', 'cursor .'], {
+              cwd: service.path,
+            }).execute()
+          } catch (fallbackError) {
+            console.error('Failed to open Cursor with fallback method:', fallbackError)
+          }
+        }
       },
       category: 'Servicio actual',
       dependencies: [serviceName],
@@ -105,10 +115,21 @@ export default function Service() {
           variant="outline"
           size="sm"
           onClick={async () => {
-            await Command.create('zsh', ['-l', '-c', 'cursor .'], {
-              cwd: service.path,
-            }).execute()
+            try {
+              await Command.create('open', ['-a', 'Cursor', service.path]).execute()
+            } catch (error) {
+              console.error('Failed to open Cursor:', error)
+              // Fallback to the old method if Cursor app is not found
+              try {
+                await Command.create('zsh', ['-l', '-c', 'cursor .'], {
+                  cwd: service.path,
+                }).execute()
+              } catch (fallbackError) {
+                console.error('Failed to open Cursor with fallback method:', fallbackError)
+              }
+            }
           }}
+          title="Open in Cursor"
         >
           <Code className="w-4 h-4" />
         </Button>
