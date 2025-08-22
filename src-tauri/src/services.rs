@@ -214,10 +214,16 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
     };
     
     // Start with tokio::process using user's login shell to load environment
+    // Source shell configuration files for the built app
+    let shell_command = format!(
+        "source ~/.zshrc 2>/dev/null || true; {}",
+        command_string
+    );
+    
     let mut tokio_child = TokioCommand::new("/bin/zsh")
         .arg("-l")  // Login shell - loads user environment
         .arg("-c")
-        .arg(&command_string)
+        .arg(&shell_command)
         .current_dir(&service.path)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

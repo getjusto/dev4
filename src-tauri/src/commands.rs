@@ -34,6 +34,10 @@ pub async fn prepare_services_start(services: Vec<ServiceData>) -> Result<(), St
         let script = format!(
             r#"#!/bin/bash
 # Justo Runner V4.1
+
+# Source shell configuration to access yarn
+source ~/.zshrc 2>/dev/null || true
+
 export LOCAL_NETWORK_NAME=host.docker.internal
 export MONGO_URL=mongodb://host.docker.internal:3003/{}
 export KAFKA_BROKERS=host.docker.internal:30092
