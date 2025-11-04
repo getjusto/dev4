@@ -15,6 +15,7 @@ export interface AppSettings {
   justoPath: string
   deliveryPath: string
   onServices: Record<string, boolean>
+  nodeVersions?: Record<string, string> // service.fullName -> node version
 }
 
 export function useCreateSettingsContext() {
@@ -26,6 +27,7 @@ export function useCreateSettingsContext() {
     justoPath: '',
     deliveryPath: '',
     onServices: {},
+    nodeVersions: {},
   })
 
   const services = useServices(settings)
@@ -136,6 +138,7 @@ export function useCreateSettingsContext() {
         category: service.category,
         config: service.config,
         start_command: service.startCommand,
+        node_version: service.nodeVersion,
       }))
 
       const actions = await invoke<string[]>('ensure_services_running', {
@@ -157,6 +160,20 @@ export function useCreateSettingsContext() {
     }
   }
 
+  const setServiceNodeVersion = async (category: string, service: string, nodeVersion: string) => {
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        nodeVersions: {
+          ...(prev.nodeVersions || {}),
+          [`${category}.${service}`]: nodeVersion,
+        },
+      }
+      saveSettings(newSettings)
+      return newSettings
+    })
+  }
+
   const status = useServicesStatus(services)
   const processes = useProcesses([
     ...services.deliveryList,
@@ -171,6 +188,7 @@ export function useCreateSettingsContext() {
     saveSettings,
     services,
     setServiceOn,
+    setServiceNodeVersion,
     status,
     processes,
     loaded: loaded && services.loaded,

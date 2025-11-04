@@ -58,6 +58,16 @@ pub async fn get_services_in_services(settings: &AppSettings) -> Result<Vec<Serv
                             .copied()
                             .unwrap_or(false);
                         
+                        // Get Node version from settings or config file
+                        let node_version = settings.node_versions
+                            .as_ref()
+                            .and_then(|node_map| node_map.get(&full_name).cloned())
+                            .or_else(|| {
+                                config.get("nodeVersion")
+                                    .and_then(|v| v.as_str())
+                                    .map(|s| s.to_string())
+                            });
+                        
                         services.push(ServiceData {
                             name: service_name.clone(),
                             path: path.to_string_lossy().to_string(),
@@ -67,6 +77,7 @@ pub async fn get_services_in_services(settings: &AppSettings) -> Result<Vec<Serv
                             category: "services".to_string(),
                             config,
                             start_command: "sh .start.run.sh".to_string(),
+                            node_version,
                         });
                     }
                     Err(e) => {
@@ -109,6 +120,9 @@ pub fn get_services_in_justo(settings: &AppSettings) -> Vec<ServiceData> {
             category: "justo".to_string(),
             config: HashMap::new(),
             start_command: "sh start.sh".to_string(),
+            node_version: settings.node_versions
+                .as_ref()
+                .and_then(|node_map| node_map.get("justo.main").cloned()),
         },
         ServiceData {
             name: "web".to_string(),
@@ -122,6 +136,9 @@ pub fn get_services_in_justo(settings: &AppSettings) -> Vec<ServiceData> {
             category: "justo".to_string(),
             config: HashMap::new(),
             start_command: "yarn start".to_string(),
+            node_version: settings.node_versions
+                .as_ref()
+                .and_then(|node_map| node_map.get("justo.web").cloned()),
         },
     ]
 }
@@ -147,6 +164,9 @@ pub fn get_services_in_delivery(settings: &AppSettings) -> Vec<ServiceData> {
             category: "delivery".to_string(),
             config: HashMap::new(),
             start_command: "sh start.sh".to_string(),
+            node_version: settings.node_versions
+                .as_ref()
+                .and_then(|node_map| node_map.get("delivery.main").cloned()),
         },
         ServiceData {
             name: "web".to_string(),
@@ -160,6 +180,9 @@ pub fn get_services_in_delivery(settings: &AppSettings) -> Vec<ServiceData> {
             category: "delivery".to_string(),
             config: HashMap::new(),
             start_command: "yarn start".to_string(),
+            node_version: settings.node_versions
+                .as_ref()
+                .and_then(|node_map| node_map.get("delivery.web").cloned()),
         },
     ]
 }
@@ -175,18 +198,19 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
     // Determine the command to run based on the service category
     let (command, args) = match service.category.as_str() {
         "services" => {
-            // For services, run the .start.run.sh script
+            // For services, run the .start.run.sh script directly (it has #!/bin/bash shebang)
             let script_path = format!("{}/.start.run.sh", service.path);
             if !Path::new(&script_path).exists() {
                 return Err(format!("Start script not found: {}", script_path));
             }
-            ("sh", vec![".start.run.sh".to_string()])
+            // Make sure the script is executable and run it directly
+            ("./.start.run.sh", vec![])
         }
         "justo" | "delivery" => {
             // For justo and delivery, run the start command directly
             if service.start_command.starts_with("sh ") {
                 let script_name = service.start_command.strip_prefix("sh ").unwrap_or("start.sh");
-                ("sh", vec![script_name.to_string()])
+                ("bash", vec![script_name.to_string()])
             } else if service.start_command.starts_with("yarn ") {
                 let yarn_command = service.start_command.strip_prefix("yarn ").unwrap_or("start");
                 ("yarn", vec![yarn_command.to_string()])
@@ -203,7 +227,11 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
     {
         let mut processes = processes_state.lock().unwrap();
         processes.clear_output(&service.full_name);
-        processes.add_output(&service.full_name, &format!("Starting {} service...\n", service.name));
+        processes.add_output(&service.full_name, &format!("🚀 Starting {} service...\n", service.name));
+        processes.add_output(&service.full_name, &format!("Directory: {}\n", service.path));
+        processes.add_output(&service.full_name, &format!("Command: {} {}\n", command, args.join(" ")));
+        processes.add_output(&service.full_name, &format!("Port: {}\n", service.port));
+        processes.add_output(&service.full_name, "Loading environment...\n");
     }
     
     // Build the command string
@@ -214,17 +242,28 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
     };
     
     // Start with tokio::process using user's login shell to load environment
-    // Source shell configuration files for the built app
+    // Source multiple shell configuration files for better compatibility and ensure we stay in the correct directory
+    let node_setup = if let Some(node_version) = &service.node_version {
+        format!(
+            "export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"; [ -s \"$NVM_DIR/bash_completion\" ] && . \"$NVM_DIR/bash_completion\"; if command -v nvm >/dev/null 2>&1; then echo 'Using Node.js version: {}'; nvm use {} 2>/dev/null || nvm install {} 2>/dev/null || echo 'Warning: Could not switch to Node.js version {}'; else echo 'NVM not found, using system Node.js'; fi",
+            node_version, node_version, node_version, node_version
+        )
+    } else {
+        "echo 'Using default Node.js version'".to_string()
+    };
+    
+    // Execute with bash login shell to properly inherit environment
     let shell_command = format!(
-        "source ~/.zshrc 2>/dev/null || true; {}",
-        command_string
+        "cd '{}' && {}",
+        service.path, command_string
     );
     
     let mut tokio_child = TokioCommand::new("/bin/zsh")
-        .arg("-l")  // Login shell - loads user environment
+        .arg("-l")  // Login shell - loads user environment from .zshrc
         .arg("-c")
         .arg(&shell_command)
         .current_dir(&service.path)
+        .env("HOME", std::env::var("HOME").unwrap_or_else(|_| "/Users".to_string()))
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -273,7 +312,20 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
         match tokio_child.wait().await {
             Ok(exit_status) => {
                 if let Ok(mut processes) = processes_state_clone.lock() {
-                    processes.add_output(&service_name_clone, &format!("\nProcess exited with status: {}\n", exit_status));
+                    if exit_status.success() {
+                        processes.add_output(&service_name_clone, &format!("\n✅ Process completed successfully: {}\n", exit_status));
+                    } else {
+                        processes.add_output(&service_name_clone, &format!("\n❌ Process failed with exit status: {}\n", exit_status));
+                        if let Some(code) = exit_status.code() {
+                            processes.add_output(&service_name_clone, &format!("Exit code: {}\n", code));
+                            match code {
+                                1 => processes.add_output(&service_name_clone, "Common causes: Missing dependencies, syntax errors, or permission issues\n"),
+                                127 => processes.add_output(&service_name_clone, "Command not found - check if the required tools (node, yarn, etc.) are installed\n"),
+                                130 => processes.add_output(&service_name_clone, "Process interrupted (Ctrl+C)\n"),
+                                _ => processes.add_output(&service_name_clone, &format!("See above logs for details about exit code {}\n", code)),
+                            }
+                        }
+                    }
                 }
             }
             Err(e) => {

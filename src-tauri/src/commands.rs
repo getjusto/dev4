@@ -31,12 +31,34 @@ pub async fn prepare_services_start(services: Vec<ServiceData>) -> Result<(), St
     println!("Preparing start scripts for {} services", services.len());
     
     for service in services {
+        let node_setup = if let Some(node_version) = &service.node_version {
+            format!(
+                "# Load NVM and use specific Node version
+export NVM_DIR=\"$HOME/.nvm\"
+[ -s \"$NVM_DIR/nvm.sh\" ] && source \"$NVM_DIR/nvm.sh\"
+[ -s \"$NVM_DIR/bash_completion\" ] && source \"$NVM_DIR/bash_completion\"
+if command -v nvm >/dev/null 2>&1; then
+    echo \"Using Node.js version: {}\"
+    nvm use {} 2>/dev/null || nvm install {} 2>/dev/null || echo \"Warning: Could not switch to Node.js version {}\"
+else
+    echo \"NVM not found, using system Node.js\"
+fi
+echo \"Current Node.js version: $(node --version 2>/dev/null || echo 'N/A')\"
+",
+                node_version, node_version, node_version, node_version
+            )
+        } else {
+            "# Using default Node.js version\necho \"Current Node.js version: $(node --version 2>/dev/null || echo 'N/A')\"\n".to_string()
+        };
+
         let script = format!(
             r#"#!/bin/bash
 # Justo Runner V4.1
 
 # Source shell configuration to access yarn
 source ~/.zshrc 2>/dev/null || true
+
+{}
 
 export LOCAL_NETWORK_NAME=host.docker.internal
 export MONGO_URL=mongodb://host.docker.internal:3003/{}
@@ -85,8 +107,9 @@ else
   echo "No process running on port $PORT"
 fi
 
-exec sh start.sh 
+exec bash start.sh 
 "#,
+            node_setup,
             service.config.get("dbName")
                 .and_then(|v| v.as_str())
                 .unwrap_or(&service.name),
@@ -99,6 +122,18 @@ exec sh start.sh
         let script_path = format!("{}/.start.run.sh", service.path);
         fs::write(&script_path, script)
             .map_err(|e| format!("Failed to write start script for {}: {}", service.name, e))?;
+        
+        // Make the script executable
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = fs::metadata(&script_path)
+                .map_err(|e| format!("Failed to get metadata for {}: {}", script_path, e))?
+                .permissions();
+            perms.set_mode(0o755); // rwxr-xr-x
+            fs::set_permissions(&script_path, perms)
+                .map_err(|e| format!("Failed to set permissions for {}: {}", script_path, e))?;
+        }
             
         println!("Created start script for service: {}", service.name);
     }
@@ -222,4 +257,44 @@ pub async fn clear_service_output(app_handle: AppHandle, service_name: String) -
     
     processes.clear_output(&service_name);
     Ok(())
+}
+
+/// Get available Node.js versions from NVM
+#[tauri::command]
+pub async fn get_available_node_versions() -> Result<Vec<String>, String> {
+    use std::process::Command;
+    
+    // First try to get versions from NVM
+    let output = Command::new("zsh")
+        .arg("-c")
+        .arg("source ~/.zshrc 2>/dev/null; export NVM_DIR=\"$HOME/.nvm\"; [ -s \"$NVM_DIR/nvm.sh\" ] && source \"$NVM_DIR/nvm.sh\"; nvm list 2>/dev/null | grep -o 'v[0-9]*\\.[0-9]*\\.[0-9]*' | sed 's/^v//' | sort -V")
+        .output();
+    
+    let mut versions = Vec::new();
+    
+    if let Ok(output) = output {
+        if output.status.success() {
+            let output_str = String::from_utf8_lossy(&output.stdout);
+            for line in output_str.lines() {
+                let version = line.trim();
+                if !version.is_empty() {
+                    versions.push(version.to_string());
+                }
+            }
+        }
+    }
+    
+    // If no versions found from NVM, add some common versions
+    if versions.is_empty() {
+        versions = vec![
+            "16.20.0".to_string(),
+            "18.17.0".to_string(),
+            "18.18.0".to_string(),
+            "20.10.0".to_string(),
+            "20.11.0".to_string(),
+            "21.0.0".to_string(),
+        ];
+    }
+    
+    Ok(versions)
 } 

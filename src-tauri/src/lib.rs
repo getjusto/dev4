@@ -35,7 +35,8 @@ pub fn run() {
             ensure_services_running,
             stop_all_services_command,
             get_service_output,
-            clear_service_output
+            clear_service_output,
+            get_available_node_versions
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

@@ -46,6 +46,7 @@ pub struct ServiceData {
     pub category: String, // "services", "justo", "delivery"
     pub config: HashMap<String, serde_json::Value>,
     pub start_command: String,
+    pub node_version: Option<String>, // Node.js version to use (e.g., "18.17.0", "20.10.0")
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,6 +59,8 @@ pub struct AppSettings {
     pub delivery_path: Option<String>,
     #[serde(rename = "onServices")]
     pub on_services: Option<HashMap<String, bool>>,
+    #[serde(rename = "nodeVersions")]
+    pub node_versions: Option<HashMap<String, String>>, // service.full_name -> node version
 }
 
 #[derive(Debug, Serialize)]

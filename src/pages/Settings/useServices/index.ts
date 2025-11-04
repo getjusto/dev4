@@ -12,6 +12,7 @@ export interface ServiceData {
   category: 'services' | 'justo' | 'delivery'
   config: Record<string, any>
   startCommand: string
+  nodeVersion?: string // Node.js version to use (e.g., "18.17.0", "20.10.0")
 }
 
 interface RustServiceData {
@@ -23,6 +24,7 @@ interface RustServiceData {
   category: string
   config: Record<string, any>
   start_command: string
+  node_version?: string
 }
 
 interface ServicesResponse {
@@ -48,6 +50,7 @@ export function useServices(settings: AppSettings) {
           justoPath: settings.justoPath,
           deliveryPath: settings.deliveryPath,
           onServices: settings.onServices,
+          nodeVersions: settings.nodeVersions,
         },
       })
       
@@ -61,6 +64,7 @@ export function useServices(settings: AppSettings) {
         category: service.category as 'services' | 'justo' | 'delivery',
         config: service.config,
         startCommand: service.start_command,
+        nodeVersion: service.node_version,
       }))
       
       const justoList: ServiceData[] = response.justo_list.map(service => ({
@@ -72,6 +76,7 @@ export function useServices(settings: AppSettings) {
         category: service.category as 'services' | 'justo' | 'delivery',
         config: service.config,
         startCommand: service.start_command,
+        nodeVersion: service.node_version,
       }))
       
       const deliveryList: ServiceData[] = response.delivery_list.map(service => ({
@@ -83,6 +88,7 @@ export function useServices(settings: AppSettings) {
         category: service.category as 'services' | 'justo' | 'delivery',
         config: service.config,
         startCommand: service.start_command,
+        nodeVersion: service.node_version,
       }))
       
       // Prepare start scripts for services that need them (only services category)
@@ -97,6 +103,7 @@ export function useServices(settings: AppSettings) {
             category: service.category,
             config: service.config,
             start_command: service.startCommand,
+            node_version: service.nodeVersion,
           })),
         })
       }
@@ -119,6 +126,7 @@ export function useServices(settings: AppSettings) {
             category: service.category,
             config: service.config,
             start_command: service.startCommand,
+            node_version: service.nodeVersion,
           }))
 
           const actions = await invoke<string[]>('ensure_services_running', {

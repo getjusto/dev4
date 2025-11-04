@@ -14,11 +14,12 @@ import {
 import {useProvideCommands} from '../Layout/CommandBar/Context'
 import Logs from './Logs'
 import {openNativeTerminal} from '@/lib/openTerminal'
+import {NodeVersionSelector} from '@/components/NodeVersionSelector'
 
 export default function Service() {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
-  const {setServiceOn, status: allStatus, processes} = useSettings()
+  const {setServiceOn, setServiceNodeVersion, status: allStatus, processes} = useSettings()
   const [tab, setTab] = useState<'logs'>('logs') // Only logs tab now
   const currentStatus = allStatus[`${category}.${serviceName}`] || 'off'
 
@@ -101,6 +102,12 @@ export default function Service() {
           </BreadcrumbList>
         </Breadcrumb>
         <div className="flex-1" />
+        <NodeVersionSelector
+          currentVersion={service.nodeVersion}
+          serviceName={serviceName}
+          category={category}
+          onVersionChange={(version) => setServiceNodeVersion(category, serviceName, version)}
+        />
         <Button
           variant="outline"
           size="sm"
