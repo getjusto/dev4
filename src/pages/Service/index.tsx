@@ -1,7 +1,7 @@
 import {useParams} from 'react-router-dom'
 import {useServiceData, useSettings} from '../Settings/Context'
 import {Button} from '@/components/ui/button'
-import {Code, Terminal, Trash} from 'lucide-react'
+import {Code, RotateCcw, Terminal, Trash} from 'lucide-react'
 import {Command} from '@tauri-apps/plugin-shell'
 import {useState} from 'react'
 import {
@@ -57,6 +57,17 @@ export default function Service() {
       hotkeys: ['mod+o'],
     },
     {
+      title: 'Reiniciar servicio',
+      action: async () => {
+        await setServiceOn(category, serviceName, false)
+        await new Promise(resolve => setTimeout(resolve, 500))
+        await setServiceOn(category, serviceName, true)
+      },
+      category: 'Servicio actual',
+      dependencies: [serviceName],
+      hotkeys: ['mod+r'],
+    },
+    {
       title: 'Abrir en cursor',
       action: async () => {
         try {
@@ -107,8 +118,24 @@ export default function Service() {
           onClick={() => {
             processes.resetOutput(service)
           }}
+          title="Clear logs"
         >
           <Trash className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            // Restart service by turning it off and then on again
+            await setServiceOn(category, serviceName, false)
+            // Small delay to ensure the service is fully stopped before restarting
+            await new Promise(resolve => setTimeout(resolve, 500))
+            await setServiceOn(category, serviceName, true)
+          }}
+          title="Restart service"
+        >
+          <RotateCcw className="w-4 h-4" />
         </Button>
 
         <Button
