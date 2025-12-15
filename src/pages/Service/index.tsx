@@ -70,17 +70,20 @@ export default function Service() {
     {
       title: 'Abrir en cursor',
       action: async () => {
+        console.log('[OpenCursor Command] Starting...', {path: service.path})
         try {
-          await Command.create('open', ['-a', 'Cursor', service.path]).execute()
+          // Try using the cursor CLI command directly via /bin/zsh (must use full path per shell scope)
+          const result = await Command.create('/bin/zsh', ['-l', '-c', `cursor "${service.path}"`]).execute()
+          console.log('[OpenCursor Command] cursor CLI result:', result)
         } catch (error) {
-          console.error('Failed to open Cursor:', error)
-          // Fallback to the old method if Cursor app is not found
+          console.error('[OpenCursor Command] cursor CLI failed:', error)
+          // Fallback to open with bundle identifier
           try {
-            await Command.create('zsh', ['-l', '-c', 'cursor .'], {
-              cwd: service.path,
-            }).execute()
+            console.log('[OpenCursor Command] Trying open -b (bundle id) fallback...')
+            const fallbackResult = await Command.create('open', ['-b', 'com.todesktop.230313mzl4w4u92', service.path]).execute()
+            console.log('[OpenCursor Command] Fallback result:', fallbackResult)
           } catch (fallbackError) {
-            console.error('Failed to open Cursor with fallback method:', fallbackError)
+            console.error('[OpenCursor Command] Fallback method failed:', fallbackError)
           }
         }
       },
@@ -142,17 +145,20 @@ export default function Service() {
           variant="outline"
           size="sm"
           onClick={async () => {
+            console.log('[OpenCursor Button] Starting...', {path: service.path})
             try {
-              await Command.create('open', ['-a', 'Cursor', service.path]).execute()
+              // Try using the cursor CLI command directly via /bin/zsh (must use full path per shell scope)
+              const result = await Command.create('/bin/zsh', ['-l', '-c', `cursor "${service.path}"`]).execute()
+              console.log('[OpenCursor Button] cursor CLI result:', result)
             } catch (error) {
-              console.error('Failed to open Cursor:', error)
-              // Fallback to the old method if Cursor app is not found
+              console.error('[OpenCursor Button] cursor CLI failed:', error)
+              // Fallback to open with bundle identifier
               try {
-                await Command.create('zsh', ['-l', '-c', 'cursor .'], {
-                  cwd: service.path,
-                }).execute()
+                console.log('[OpenCursor Button] Trying open -b (bundle id) fallback...')
+                const fallbackResult = await Command.create('open', ['-b', 'com.todesktop.230313mzl4w4u92', service.path]).execute()
+                console.log('[OpenCursor Button] Fallback result:', fallbackResult)
               } catch (fallbackError) {
-                console.error('Failed to open Cursor with fallback method:', fallbackError)
+                console.error('[OpenCursor Button] Fallback method failed:', fallbackError)
               }
             }
           }}
