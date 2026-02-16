@@ -9,7 +9,7 @@ export interface ServiceData {
   port: number
   fullName: string
   on: boolean
-  category: 'services' | 'justo' | 'delivery'
+  category: 'services'
   config: Record<string, any>
   startCommand: string
 }
@@ -27,15 +27,11 @@ interface RustServiceData {
 
 interface ServicesResponse {
   services_list: RustServiceData[]
-  justo_list: RustServiceData[]
-  delivery_list: RustServiceData[]
 }
 
 export function useServices(settings: AppSettings) {
   const [loaded, setLoaded] = useState(false)
   const [servicesList, setServicesList] = useState<ServiceData[]>([])
-  const [justoList, setJustoList] = useState<ServiceData[]>([])
-  const [deliveryList, setDeliveryList] = useState<ServiceData[]>([])
 
   useEffect(() => {
     ;(async () => {
@@ -45,8 +41,6 @@ export function useServices(settings: AppSettings) {
       const response = await invoke<ServicesResponse>('get_services_list', {
         settings: {
           servicesPath: settings.servicesPath,
-          justoPath: settings.justoPath,
-          deliveryPath: settings.deliveryPath,
           onServices: settings.onServices,
         },
       })
@@ -58,29 +52,7 @@ export function useServices(settings: AppSettings) {
         port: service.port,
         fullName: service.full_name,
         on: service.on,
-        category: service.category as 'services' | 'justo' | 'delivery',
-        config: service.config,
-        startCommand: service.start_command,
-      }))
-      
-      const justoList: ServiceData[] = response.justo_list.map(service => ({
-        name: service.name,
-        path: service.path,
-        port: service.port,
-        fullName: service.full_name,
-        on: service.on,
-        category: service.category as 'services' | 'justo' | 'delivery',
-        config: service.config,
-        startCommand: service.start_command,
-      }))
-      
-      const deliveryList: ServiceData[] = response.delivery_list.map(service => ({
-        name: service.name,
-        path: service.path,
-        port: service.port,
-        fullName: service.full_name,
-        on: service.on,
-        category: service.category as 'services' | 'justo' | 'delivery',
+        category: service.category as 'services',
         config: service.config,
         startCommand: service.start_command,
       }))
@@ -102,11 +74,9 @@ export function useServices(settings: AppSettings) {
       }
       
       setServicesList(servicesList)
-      setJustoList(justoList)
-      setDeliveryList(deliveryList)
       
       // Ensure services are running according to their 'on' state on startup
-      const allServices = [...servicesList, ...justoList, ...deliveryList]
+      const allServices = [...servicesList]
       if (allServices.length > 0) {
         try {
           // Convert to Rust format for the command
@@ -144,7 +114,5 @@ export function useServices(settings: AppSettings) {
   return {
     loaded,
     servicesList,
-    justoList,
-    deliveryList,
   }
 }

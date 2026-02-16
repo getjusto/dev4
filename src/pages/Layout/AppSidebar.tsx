@@ -43,7 +43,7 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const allServices = [...services.servicesList, ...services.justoList, ...services.deliveryList]
+  const allServices = [...services.servicesList]
   useProvideCommands(
     allServices.map(service => ({
       title: `Entrar a ${service.category} ${service.name}`,
@@ -71,7 +71,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Services</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {services.servicesList.map(item => (
+              {allServices.map(item => (
                 <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton
                     asChild
@@ -91,54 +91,6 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {services.justoList.map(item => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
-                  >
-                    <Link to={`/services/justo/${item.name}`}>
-                      <ServiceStatusComp service={item} />
-                      <span>{item.name}</span>
-                      {item.port && (
-                        <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
-                          {item.port}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupLabel>Delivery</SidebarGroupLabel>
-          <SidebarMenu>
-            {services.deliveryList.map(item => (
-              <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
-                >
-                  <Link to={`/services/delivery/${item.name}`}>
-                    <ServiceStatusComp service={item} />
-                    <span>{item.name}</span>
-                    {item.port && (
-                      <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
-                        {item.port}
-                      </span>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

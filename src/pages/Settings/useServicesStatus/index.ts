@@ -31,8 +31,6 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
 
     for (const service of [
       ...services.servicesList,
-      ...services.justoList,
-      ...services.deliveryList,
     ]) {
       checkStatus(service)
     }

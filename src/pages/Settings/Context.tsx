@@ -13,12 +13,7 @@ export function useSettings() {
 
 export function useServiceData(serviceName: string, category: string) {
   const {services} = useSettings()
-  const categoryServices = (() => {
-    if (category === 'services') return services.servicesList
-    if (category === 'justo') return services.justoList
-    if (category === 'delivery') return services.deliveryList
-    return []
-  })()
+  const categoryServices = category === 'services' ? services.servicesList : []
 
   const service = categoryServices.find(service => service.name === serviceName)
   return service

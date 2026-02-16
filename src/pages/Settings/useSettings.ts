@@ -12,9 +12,29 @@ const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
 
 export interface AppSettings {
   servicesPath: string
-  justoPath: string
-  deliveryPath: string
   onServices: Record<string, boolean>
+}
+
+function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): AppSettings {
+  const onServices = {...(raw.onServices || {})}
+
+  const legacyKeyMap: Record<string, string> = {
+    'justo.main': 'services.justo-server',
+    'justo.web': 'services.justo-web',
+    'delivery.main': 'services.drivers-server',
+    'delivery.web': 'services.drivers-web',
+  }
+
+  for (const [legacyKey, servicesKey] of Object.entries(legacyKeyMap)) {
+    if (typeof onServices[legacyKey] === 'boolean' && typeof onServices[servicesKey] !== 'boolean') {
+      onServices[servicesKey] = onServices[legacyKey]
+    }
+  }
+
+  return {
+    servicesPath: raw.servicesPath || '',
+    onServices,
+  }
 }
 
 export function useCreateSettingsContext() {
@@ -23,8 +43,6 @@ export function useCreateSettingsContext() {
 
   const [settings, setSettings] = useState<AppSettings>({
     servicesPath: '',
-    justoPath: '',
-    deliveryPath: '',
     onServices: {},
   })
 
@@ -51,7 +69,7 @@ export function useCreateSettingsContext() {
         const settingsData = await readTextFile(settingsPath, {
           baseDir: BaseDirectory.AppConfig,
         })
-        const parsedSettings = JSON.parse(settingsData) as AppSettings
+        const parsedSettings = normalizeSettings(JSON.parse(settingsData))
         setSettings(parsedSettings)
       } else {
         // Create the settings file with default values if it doesn't exist
@@ -114,8 +132,6 @@ export function useCreateSettingsContext() {
     try {
       const allServices = [
         ...services.servicesList,
-        ...services.justoList,
-        ...services.deliveryList,
       ]
       
       // Update the specific service's 'on' state in the list
@@ -158,11 +174,7 @@ export function useCreateSettingsContext() {
   }
 
   const status = useServicesStatus(services)
-  const processes = useProcesses([
-    ...services.deliveryList,
-    ...services.justoList,
-    ...services.servicesList,
-  ])
+  const processes = useProcesses([...services.servicesList])
 
   return {
     settings,

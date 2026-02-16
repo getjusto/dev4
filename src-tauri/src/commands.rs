@@ -1,5 +1,5 @@
 use crate::types::{AppSettings, ServiceData, ServiceProcessesState, ServicesResponse};
-use crate::services::{get_services_in_services, get_services_in_justo, get_services_in_delivery, start_service_with_output_capture, stop_all_services};
+use crate::services::{get_services_in_services, start_service_with_output_capture, stop_all_services};
 use std::collections::HashMap;
 use std::fs;
 use tauri::{AppHandle, Manager};
@@ -9,19 +9,15 @@ pub fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
-/// Get all services from the three categories: services, justo, and delivery
+/// Get all services from the services monorepo folder.
 #[tauri::command]
 pub async fn get_services_list(settings: AppSettings) -> Result<ServicesResponse, String> {
     println!("Getting services list with settings: {:?}", settings);
     
     let services_list = get_services_in_services(&settings).await?;
-    let justo_list = get_services_in_justo(&settings);
-    let delivery_list = get_services_in_delivery(&settings);
     
     Ok(ServicesResponse {
         services_list,
-        justo_list,
-        delivery_list,
     })
 }
 

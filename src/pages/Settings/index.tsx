@@ -17,7 +17,7 @@ export default function Settings() {
   }
 
   return (
-    <PageLayout title="Settings" subtitle="Ingresa los paths de los servicios, justo y delivery.">
+    <PageLayout title="Settings" subtitle="Ingresa el path del monorepo services.">
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="servicesPath" className="text-sm font-medium">
@@ -28,30 +28,6 @@ export default function Settings() {
             value={settings.servicesPath}
             onChange={handleChange('servicesPath')}
             placeholder="Enter services path"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="justoPath" className="text-sm font-medium">
-            Justo Path
-          </label>
-          <Input
-            id="justoPath"
-            value={settings.justoPath}
-            onChange={handleChange('justoPath')}
-            placeholder="Enter justo path"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="deliveryPath" className="text-sm font-medium">
-            Delivery Path
-          </label>
-          <Input
-            id="deliveryPath"
-            value={settings.deliveryPath}
-            onChange={handleChange('deliveryPath')}
-            placeholder="Enter delivery path"
           />
         </div>
 

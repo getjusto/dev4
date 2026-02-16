@@ -43,7 +43,7 @@ pub struct ServiceData {
     pub port: u32,
     pub full_name: String,
     pub on: bool,
-    pub category: String, // "services", "justo", "delivery"
+    pub category: String, // "services"
     pub config: HashMap<String, serde_json::Value>,
     pub start_command: String,
 }
@@ -52,10 +52,6 @@ pub struct ServiceData {
 pub struct AppSettings {
     #[serde(rename = "servicesPath")]
     pub services_path: Option<String>,
-    #[serde(rename = "justoPath")]
-    pub justo_path: Option<String>,
-    #[serde(rename = "deliveryPath")]
-    pub delivery_path: Option<String>,
     #[serde(rename = "onServices")]
     pub on_services: Option<HashMap<String, bool>>,
 }
@@ -63,6 +59,4 @@ pub struct AppSettings {
 #[derive(Debug, Serialize)]
 pub struct ServicesResponse {
     pub services_list: Vec<ServiceData>,
-    pub justo_list: Vec<ServiceData>,
-    pub delivery_list: Vec<ServiceData>,
 } 

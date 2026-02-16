@@ -88,82 +88,6 @@ pub async fn get_services_in_services(settings: &AppSettings) -> Result<Vec<Serv
     Ok(services)
 }
 
-pub fn get_services_in_justo(settings: &AppSettings) -> Vec<ServiceData> {
-    let justo_path = match &settings.justo_path {
-        Some(path) => path,
-        None => return vec![],
-    };
-    
-    let on_services = settings.on_services.as_ref();
-    
-    vec![
-        ServiceData {
-            name: "main".to_string(),
-            path: format!("{}/server", justo_path),
-            port: 3000,
-            full_name: "justo.main".to_string(),
-            on: on_services
-                .and_then(|on_map| on_map.get("justo.main"))
-                .copied()
-                .unwrap_or(false),
-            category: "justo".to_string(),
-            config: HashMap::new(),
-            start_command: "sh start.sh".to_string(),
-        },
-        ServiceData {
-            name: "web".to_string(),
-            path: format!("{}/web", justo_path),
-            port: 3010,
-            full_name: "justo.web".to_string(),
-            on: on_services
-                .and_then(|on_map| on_map.get("justo.web"))
-                .copied()
-                .unwrap_or(false),
-            category: "justo".to_string(),
-            config: HashMap::new(),
-            start_command: "yarn start".to_string(),
-        },
-    ]
-}
-
-pub fn get_services_in_delivery(settings: &AppSettings) -> Vec<ServiceData> {
-    let delivery_path = match &settings.delivery_path {
-        Some(path) => path,
-        None => return vec![],
-    };
-    
-    let on_services = settings.on_services.as_ref();
-    
-    vec![
-        ServiceData {
-            name: "main".to_string(),
-            path: format!("{}/server", delivery_path),
-            port: 3410,
-            full_name: "delivery.main".to_string(),
-            on: on_services
-                .and_then(|on_map| on_map.get("delivery.main"))
-                .copied()
-                .unwrap_or(false),
-            category: "delivery".to_string(),
-            config: HashMap::new(),
-            start_command: "sh start.sh".to_string(),
-        },
-        ServiceData {
-            name: "web".to_string(),
-            path: format!("{}/web", delivery_path),
-            port: 3420,
-            full_name: "delivery.web".to_string(),
-            on: on_services
-                .and_then(|on_map| on_map.get("delivery.web"))
-                .copied()
-                .unwrap_or(false),
-            category: "delivery".to_string(),
-            config: HashMap::new(),
-            start_command: "yarn start".to_string(),
-        },
-    ]
-}
-
 pub async fn start_service_with_output_capture(service: &ServiceData, processes_state: ServiceProcessesState) -> Result<u32, String> {
     println!("Starting service {} at path {}", service.name, service.path);
     
@@ -172,30 +96,12 @@ pub async fn start_service_with_output_capture(service: &ServiceData, processes_
         return Err(format!("Service path does not exist: {}", service.path));
     }
     
-    // Determine the command to run based on the service category
-    let (command, args) = match service.category.as_str() {
-        "services" => {
-            // For services, run the .start.run.sh script
-            let script_path = format!("{}/.start.run.sh", service.path);
-            if !Path::new(&script_path).exists() {
-                return Err(format!("Start script not found: {}", script_path));
-            }
-            ("sh", vec![".start.run.sh".to_string()])
-        }
-        "justo" | "delivery" => {
-            // For justo and delivery, run the start command directly
-            if service.start_command.starts_with("sh ") {
-                let script_name = service.start_command.strip_prefix("sh ").unwrap_or("start.sh");
-                ("sh", vec![script_name.to_string()])
-            } else if service.start_command.starts_with("yarn ") {
-                let yarn_command = service.start_command.strip_prefix("yarn ").unwrap_or("start");
-                ("yarn", vec![yarn_command.to_string()])
-            } else {
-                return Err(format!("Unsupported start command: {}", service.start_command));
-            }
-        }
-        _ => return Err(format!("Unknown service category: {}", service.category)),
-    };
+    let script_path = format!("{}/.start.run.sh", service.path);
+    if !Path::new(&script_path).exists() {
+        return Err(format!("Start script not found: {}", script_path));
+    }
+    let command = "sh";
+    let args = vec![".start.run.sh".to_string()];
     
     println!("Executing command: {} {:?} in directory: {}", command, args, service.path);
     
