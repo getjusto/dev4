@@ -1,4 +1,4 @@
-import {Settings} from 'lucide-react'
+import {Settings, Star} from 'lucide-react'
 
 import {
   Sidebar,
@@ -12,14 +12,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import {Link, useLocation, useNavigate} from 'react-router-dom'
+import {SwitchSmall} from '@/components/ui/switch-small'
 import {H4} from '@/components/ui/typography'
+import {cn} from '@/lib/utils'
+import {Link, useLocation, useNavigate} from 'react-router-dom'
 import {useSettings} from '../Settings/Context'
 import {ServiceData} from '../Settings/useServices'
-import {cn} from '@/lib/utils'
-import {SwitchSmall} from '@/components/ui/switch-small'
-import CommandsButton from './CommandsButton'
 import {useProvideCommands} from './CommandBar/Context'
+import CommandsButton from './CommandsButton'
 
 function ServiceStatusComp({service}: {service: ServiceData}) {
   const {status: allStatus, setServiceOn} = useSettings()
@@ -30,7 +30,6 @@ function ServiceStatusComp({service}: {service: ServiceData}) {
       checked={status !== 'off'}
       className={cn('cursor-pointer', {
         '!bg-green-500': status === 'on',
-        // '!bg-blue-500': status === 'off',
         '!bg-red-500': status === 'error',
       })}
       onCheckedChange={(checked: boolean) => setServiceOn(service.category, service.name, checked)}
@@ -38,12 +37,62 @@ function ServiceStatusComp({service}: {service: ServiceData}) {
   )
 }
 
+function FavoriteButton({service}: {service: ServiceData}) {
+  const {settings, toggleFavorite} = useSettings()
+  const isFavorite = settings.favoriteServices?.[`${service.category}.${service.name}`] ?? false
+
+  return (
+    <button
+      type="button"
+      className="cursor-pointer"
+      onClick={e => {
+        e.preventDefault()
+        e.stopPropagation()
+        toggleFavorite(service.category, service.name)
+      }}
+    >
+      <Star
+        className={cn('h-3.5 w-3.5 transition-colors', {
+          'fill-yellow-400 text-yellow-400': isFavorite,
+          'text-muted-foreground/40 hover:text-muted-foreground': !isFavorite,
+        })}
+      />
+    </button>
+  )
+}
+
+function ServiceItem({item, isActive}: {item: ServiceData; isActive: boolean}) {
+  return (
+    <SidebarMenuItem key={item.name}>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <Link to={`/services/services/${item.name}`}>
+          <ServiceStatusComp service={item} />
+          <span className="flex-1">{item.name}</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            {item.port && (
+              <span className="text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
+                {item.port}
+              </span>
+            )}
+            <FavoriteButton service={item} />
+          </div>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
+}
+
 export function AppSidebar() {
-  const {services} = useSettings()
+  const {services, settings} = useSettings()
   const location = useLocation()
   const navigate = useNavigate()
 
   const allServices = [...services.servicesList]
+  const favorites = settings.favoriteServices || {}
+
+  const favoriteServices = allServices.filter(s => favorites[`${s.category}.${s.name}`])
+  const nonFavoriteServices = allServices.filter(s => !favorites[`${s.category}.${s.name}`])
+
   useProvideCommands(
     allServices.map(service => ({
       title: `Entrar a ${service.category} ${service.name}`,
@@ -54,6 +103,9 @@ export function AppSidebar() {
       dependencies: [],
     })),
   )
+
+  const isActive = (item: ServiceData) =>
+    location.pathname.includes(`/services/${item.category}/${item.name}`)
 
   return (
     <Sidebar>
@@ -67,27 +119,24 @@ export function AppSidebar() {
         <CommandsButton />
       </SidebarHeader>
       <SidebarContent>
+        {favoriteServices.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Favoritos</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {favoriteServices.map(item => (
+                  <ServiceItem key={item.name} item={item} isActive={isActive(item)} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel>Services</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {allServices.map(item => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname.includes(`/services/${item.category}/${item.name}`)}
-                  >
-                    <Link to={`/services/services/${item.name}`}>
-                      <ServiceStatusComp service={item} />
-                      <span>{item.name}</span>
-                      {item.port && (
-                        <span className="ml-auto text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
-                          {item.port}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {nonFavoriteServices.map(item => (
+                <ServiceItem key={item.name} item={item} isActive={isActive(item)} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

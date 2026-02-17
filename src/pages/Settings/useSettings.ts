@@ -1,11 +1,11 @@
-import {useState, useEffect} from 'react'
-import {exists, BaseDirectory, readTextFile, writeTextFile, mkdir} from '@tauri-apps/plugin-fs'
-import {toast} from 'sonner'
-import {appConfigDir} from '@tauri-apps/api/path'
 import {invoke} from '@tauri-apps/api/core'
+import {appConfigDir} from '@tauri-apps/api/path'
+import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-apps/plugin-fs'
+import {useEffect, useState} from 'react'
+import {toast} from 'sonner'
+import {useProcesses} from './useProcesses'
 import {useServices} from './useServices'
 import {useServicesStatus} from './useServicesStatus'
-import {useProcesses} from './useProcesses'
 
 const isDev = import.meta.env.DEV
 const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
@@ -13,6 +13,7 @@ const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
 export interface AppSettings {
   servicesPath: string
   onServices: Record<string, boolean>
+  favoriteServices?: Record<string, boolean>
 }
 
 function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): AppSettings {
@@ -26,7 +27,10 @@ function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): App
   }
 
   for (const [legacyKey, servicesKey] of Object.entries(legacyKeyMap)) {
-    if (typeof onServices[legacyKey] === 'boolean' && typeof onServices[servicesKey] !== 'boolean') {
+    if (
+      typeof onServices[legacyKey] === 'boolean' &&
+      typeof onServices[servicesKey] !== 'boolean'
+    ) {
       onServices[servicesKey] = onServices[legacyKey]
     }
   }
@@ -34,6 +38,7 @@ function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): App
   return {
     servicesPath: raw.servicesPath || '',
     onServices,
+    favoriteServices: raw.favoriteServices || {},
   }
 }
 
@@ -44,6 +49,7 @@ export function useCreateSettingsContext() {
   const [settings, setSettings] = useState<AppSettings>({
     servicesPath: '',
     onServices: {},
+    favoriteServices: {},
   })
 
   const services = useServices(settings)
@@ -130,18 +136,16 @@ export function useCreateSettingsContext() {
 
     // Trigger service management to start/stop services as needed
     try {
-      const allServices = [
-        ...services.servicesList,
-      ]
-      
+      const allServices = [...services.servicesList]
+
       // Update the specific service's 'on' state in the list
       const updatedServices = allServices.map(s => {
         if (s.fullName === `${category}.${service}`) {
-          return { ...s, on }
+          return {...s, on}
         }
         return s
       })
-      
+
       // Convert to Rust format
       const rustServices = updatedServices.map(service => ({
         name: service.name,
@@ -157,9 +161,9 @@ export function useCreateSettingsContext() {
       const actions = await invoke<string[]>('ensure_services_running', {
         services: rustServices,
       })
-      
+
       console.log('Service management actions:', actions)
-      
+
       if (actions.length > 0) {
         toast.success('Service management completed', {
           description: actions.join(', '),
@@ -173,6 +177,21 @@ export function useCreateSettingsContext() {
     }
   }
 
+  const toggleFavorite = (category: string, service: string) => {
+    setSettings(prev => {
+      const key = `${category}.${service}`
+      const favorites = {...(prev.favoriteServices || {})}
+      if (favorites[key]) {
+        delete favorites[key]
+      } else {
+        favorites[key] = true
+      }
+      const newSettings = {...prev, favoriteServices: favorites}
+      saveSettings(newSettings)
+      return newSettings
+    })
+  }
+
   const status = useServicesStatus(services)
   const processes = useProcesses([...services.servicesList])
 
@@ -183,6 +202,7 @@ export function useCreateSettingsContext() {
     saveSettings,
     services,
     setServiceOn,
+    toggleFavorite,
     status,
     processes,
     loaded: loaded && services.loaded,
