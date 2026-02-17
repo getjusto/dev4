@@ -2,7 +2,7 @@ import generateId from '@/lib/generateId'
 import {invoke} from '@tauri-apps/api/core'
 import {appConfigDir} from '@tauri-apps/api/path'
 import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-apps/plugin-fs'
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {toast} from 'sonner'
 import {useProcesses} from './useProcesses'
 import {useServiceMetrics} from './useServiceMetrics'
@@ -49,6 +49,8 @@ function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): App
     servicesPath: raw.servicesPath || '',
     onServices,
     favoriteServices: raw.favoriteServices || {},
+    startServicesOnLaunch: raw.startServicesOnLaunch,
+    serviceGroups: raw.serviceGroups || [],
   }
 }
 
@@ -61,6 +63,14 @@ export function useCreateSettingsContext() {
     onServices: {},
     favoriteServices: {},
   })
+
+  // Ref to track the latest onServices synchronously (avoids stale closures in setServiceOn)
+  const onServicesRef = useRef(settings.onServices)
+
+  // Keep ref in sync when settings load or change externally
+  useEffect(() => {
+    onServicesRef.current = settings.onServices
+  }, [settings.onServices])
 
   const services = useServices(settings)
 
@@ -86,6 +96,14 @@ export function useCreateSettingsContext() {
           baseDir: BaseDirectory.AppConfig,
         })
         const parsedSettings = normalizeSettings(JSON.parse(settingsData))
+
+        // If auto-start is disabled, reset all services to off in memory (disk keeps original values)
+        if (parsedSettings.startServicesOnLaunch === false) {
+          for (const key of Object.keys(parsedSettings.onServices)) {
+            parsedSettings.onServices[key] = false
+          }
+        }
+
         setSettings(parsedSettings)
       } else {
         // Create the settings file with default values if it doesn't exist
@@ -132,6 +150,9 @@ export function useCreateSettingsContext() {
   }
 
   const setServiceOn = async (category: string, service: string, on: boolean) => {
+    // Update ref synchronously so rapid sequential calls see the latest state
+    onServicesRef.current = {...onServicesRef.current, [`${category}.${service}`]: on}
+
     setSettings(prev => {
       const newSettings = {
         ...prev,
@@ -146,15 +167,11 @@ export function useCreateSettingsContext() {
 
     // Trigger service management to start/stop services as needed
     try {
-      const allServices = [...services.servicesList]
-
-      // Update the specific service's 'on' state in the list
-      const updatedServices = allServices.map(s => {
-        if (s.fullName === `${category}.${service}`) {
-          return {...s, on}
-        }
-        return s
-      })
+      // Use the ref (not stale servicesList) to get the latest on/off state
+      const updatedServices = services.servicesList.map(s => ({
+        ...s,
+        on: onServicesRef.current[s.fullName] ?? false,
+      }))
 
       // Convert to Rust format
       const rustServices = updatedServices.map(service => ({

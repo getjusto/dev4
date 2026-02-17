@@ -1,5 +1,5 @@
 import {invoke} from '@tauri-apps/api/core'
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {toast} from 'sonner'
 import {AppSettings} from '../useSettings'
 
@@ -32,6 +32,7 @@ interface ServicesResponse {
 export function useServices(settings: AppSettings) {
   const [loaded, setLoaded] = useState(false)
   const [servicesList, setServicesList] = useState<ServiceData[]>([])
+  const didAutoStart = useRef(false)
 
   useEffect(() => {
     ;(async () => {
@@ -75,31 +76,31 @@ export function useServices(settings: AppSettings) {
 
       setServicesList(servicesList)
 
-      // Ensure services are running according to their 'on' state on startup
-      const shouldStartServices = settings.startServicesOnLaunch !== false
-      const allServices = [...servicesList]
-      if (allServices.length > 0) {
-        try {
-          // Convert to Rust format for the command
-          const rustServices = allServices.map(service => ({
-            name: service.name,
-            path: service.path,
-            port: service.port,
-            full_name: service.fullName,
-            on: shouldStartServices ? service.on : false,
-            category: service.category,
-            config: service.config,
-            start_command: service.startCommand,
-          }))
+      // Ensure services are running only on initial startup, not on every settings change
+      if (!didAutoStart.current && servicesList.length > 0) {
+        didAutoStart.current = true
+        const shouldStartServices = settings.startServicesOnLaunch !== false
+        if (shouldStartServices) {
+          try {
+            const rustServices = servicesList.map(service => ({
+              name: service.name,
+              path: service.path,
+              port: service.port,
+              full_name: service.fullName,
+              on: service.on,
+              category: service.category,
+              config: service.config,
+              start_command: service.startCommand,
+            }))
 
-          const actions = await invoke<string[]>('ensure_services_running', {
-            services: rustServices,
-          })
+            const actions = await invoke<string[]>('ensure_services_running', {
+              services: rustServices,
+            })
 
-          console.log('Startup service management actions:', actions)
-        } catch (error) {
-          console.error('Failed to manage services on startup:', error)
-          // Don't show error toast on startup to avoid overwhelming the user
+            console.log('Startup service management actions:', actions)
+          } catch (error) {
+            console.error('Failed to manage services on startup:', error)
+          }
         }
       }
     })()
