@@ -1,4 +1,4 @@
-use crate::types::{AppSettings, ServiceData, ServiceProcessesState, ServicesResponse};
+use crate::types::{AppSettings, ServiceData, ServiceMetrics, ServiceProcessesState, ServicesResponse};
 use crate::services::{get_services_in_services, start_service_with_output_capture, stop_all_services};
 use std::collections::HashMap;
 use std::fs;
@@ -218,4 +218,81 @@ pub async fn clear_service_output(app_handle: AppHandle, service_name: String) -
     
     processes.clear_output(&service_name);
     Ok(())
-} 
+}
+
+/// Get CPU and memory metrics for all running services
+#[tauri::command]
+pub async fn get_service_metrics(
+    app_handle: AppHandle,
+) -> Result<HashMap<String, ServiceMetrics>, String> {
+    let processes_state = app_handle.state::<ServiceProcessesState>();
+    let running = {
+        let processes = processes_state
+            .lock()
+            .map_err(|e| format!("Failed to lock processes state: {}", e))?;
+        processes.running.clone()
+    };
+
+    let mut metrics = HashMap::new();
+
+    if running.is_empty() {
+        return Ok(metrics);
+    }
+
+    // Collect all PIDs (root + children) mapped to their service name
+    let mut pid_to_service: HashMap<u32, String> = HashMap::new();
+    for (service_name, &pid) in &running {
+        if pid == 0 {
+            continue;
+        }
+        pid_to_service.insert(pid, service_name.clone());
+        for child_pid in crate::processes::get_child_processes(pid) {
+            pid_to_service.insert(child_pid, service_name.clone());
+        }
+    }
+
+    if pid_to_service.is_empty() {
+        return Ok(metrics);
+    }
+
+    // Single ps call for all PIDs
+    let pid_args: Vec<String> = pid_to_service.keys().map(|p| p.to_string()).collect();
+    let ps_output = std::process::Command::new("ps")
+        .args(["-o", "pid=,pcpu=,rss=", "-p"])
+        .arg(pid_args.join(","))
+        .output()
+        .map_err(|e| format!("Failed to run ps: {}", e))?;
+
+    let output_str = String::from_utf8_lossy(&ps_output.stdout);
+
+    // Aggregate metrics per service
+    for line in output_str.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() >= 3 {
+            if let (Ok(pid), Ok(cpu), Ok(rss_kb)) = (
+                parts[0].parse::<u32>(),
+                parts[1].parse::<f64>(),
+                parts[2].parse::<f64>(),
+            ) {
+                if let Some(service_name) = pid_to_service.get(&pid) {
+                    let entry = metrics
+                        .entry(service_name.clone())
+                        .or_insert(ServiceMetrics {
+                            cpu: 0.0,
+                            memory_mb: 0.0,
+                        });
+                    entry.cpu += cpu;
+                    entry.memory_mb += rss_kb / 1024.0;
+                }
+            }
+        }
+    }
+
+    // Round values
+    for m in metrics.values_mut() {
+        m.cpu = (m.cpu * 10.0).round() / 10.0;
+        m.memory_mb = (m.memory_mb * 10.0).round() / 10.0;
+    }
+
+    Ok(metrics)
+}

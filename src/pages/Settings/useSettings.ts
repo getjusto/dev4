@@ -4,6 +4,7 @@ import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-
 import {useEffect, useState} from 'react'
 import {toast} from 'sonner'
 import {useProcesses} from './useProcesses'
+import {useServiceMetrics} from './useServiceMetrics'
 import {useServices} from './useServices'
 import {useServicesStatus} from './useServicesStatus'
 
@@ -194,6 +195,7 @@ export function useCreateSettingsContext() {
 
   const status = useServicesStatus(services)
   const processes = useProcesses([...services.servicesList])
+  const metrics = useServiceMetrics()
 
   return {
     settings,
@@ -205,6 +207,7 @@ export function useCreateSettingsContext() {
     toggleFavorite,
     status,
     processes,
+    metrics,
     loaded: loaded && services.loaded,
   }
 }

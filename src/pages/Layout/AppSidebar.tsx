@@ -1,5 +1,7 @@
-import {Settings, Star} from 'lucide-react'
+import {Search, Settings, Star} from 'lucide-react'
+import {useMemo, useState} from 'react'
 
+import {Input} from '@/components/ui/input'
 import {
   Sidebar,
   SidebarContent,
@@ -86,12 +88,21 @@ export function AppSidebar() {
   const {services, settings} = useSettings()
   const location = useLocation()
   const navigate = useNavigate()
+  const [search, setSearch] = useState('')
 
   const allServices = [...services.servicesList]
   const favorites = settings.favoriteServices || {}
 
-  const favoriteServices = allServices.filter(s => favorites[`${s.category}.${s.name}`])
-  const nonFavoriteServices = allServices.filter(s => !favorites[`${s.category}.${s.name}`])
+  const {favoriteServices, nonFavoriteServices} = useMemo(() => {
+    const query = search.toLowerCase()
+    const filtered = query
+      ? allServices.filter(s => s.name.toLowerCase().includes(query))
+      : allServices
+    return {
+      favoriteServices: filtered.filter(s => favorites[`${s.category}.${s.name}`]),
+      nonFavoriteServices: filtered.filter(s => !favorites[`${s.category}.${s.name}`]),
+    }
+  }, [allServices, favorites, search])
 
   useProvideCommands(
     allServices.map(service => ({
@@ -117,6 +128,15 @@ export function AppSidebar() {
           </H4>
         </Link>
         <CommandsButton />
+        <div className="relative px-2">
+          <Search className="absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar servicio..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-7 pl-7 text-xs"
+          />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         {favoriteServices.length > 0 && (

@@ -1,9 +1,3 @@
-import {useParams} from 'react-router-dom'
-import {useServiceData, useSettings} from '../Settings/Context'
-import {Button} from '@/components/ui/button'
-import {Code, RotateCcw, Terminal, Trash} from 'lucide-react'
-import {Command} from '@tauri-apps/plugin-shell'
-import {useState} from 'react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,14 +5,20 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import {useProvideCommands} from '../Layout/CommandBar/Context'
-import Logs from './Logs'
+import {Button} from '@/components/ui/button'
 import {openNativeTerminal} from '@/lib/openTerminal'
+import {Command} from '@tauri-apps/plugin-shell'
+import {Code, Cpu, MemoryStick, RotateCcw, Terminal, Trash} from 'lucide-react'
+import {useState} from 'react'
+import {useParams} from 'react-router-dom'
+import {useProvideCommands} from '../Layout/CommandBar/Context'
+import {useServiceData, useSettings} from '../Settings/Context'
+import Logs from './Logs'
 
 export default function Service() {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
-  const {setServiceOn, status: allStatus, processes} = useSettings()
+  const {setServiceOn, status: allStatus, processes, metrics} = useSettings()
   const [tab, setTab] = useState<'logs'>('logs') // Only logs tab now
   const currentStatus = allStatus[`${category}.${serviceName}`] || 'off'
 
@@ -73,14 +73,22 @@ export default function Service() {
         console.log('[OpenCursor Command] Starting...', {path: service.path})
         try {
           // Try using the cursor CLI command directly via /bin/zsh (must use full path per shell scope)
-          const result = await Command.create('/bin/zsh', ['-l', '-c', `cursor "${service.path}"`]).execute()
+          const result = await Command.create('/bin/zsh', [
+            '-l',
+            '-c',
+            `cursor "${service.path}"`,
+          ]).execute()
           console.log('[OpenCursor Command] cursor CLI result:', result)
         } catch (error) {
           console.error('[OpenCursor Command] cursor CLI failed:', error)
           // Fallback to open with bundle identifier
           try {
             console.log('[OpenCursor Command] Trying open -b (bundle id) fallback...')
-            const fallbackResult = await Command.create('open', ['-b', 'com.todesktop.230313mzl4w4u92', service.path]).execute()
+            const fallbackResult = await Command.create('open', [
+              '-b',
+              'com.todesktop.230313mzl4w4u92',
+              service.path,
+            ]).execute()
             console.log('[OpenCursor Command] Fallback result:', fallbackResult)
           } catch (fallbackError) {
             console.error('[OpenCursor Command] Fallback method failed:', fallbackError)
@@ -114,6 +122,18 @@ export default function Service() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        {metrics[`${category}.${serviceName}`] && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Cpu className="h-3 w-3" />
+              {metrics[`${category}.${serviceName}`].cpu}%
+            </span>
+            <span className="flex items-center gap-1">
+              <MemoryStick className="h-3 w-3" />
+              {metrics[`${category}.${serviceName}`].memory_mb} MB
+            </span>
+          </div>
+        )}
         <div className="flex-1" />
         <Button
           variant="outline"
@@ -148,14 +168,22 @@ export default function Service() {
             console.log('[OpenCursor Button] Starting...', {path: service.path})
             try {
               // Try using the cursor CLI command directly via /bin/zsh (must use full path per shell scope)
-              const result = await Command.create('/bin/zsh', ['-l', '-c', `cursor "${service.path}"`]).execute()
+              const result = await Command.create('/bin/zsh', [
+                '-l',
+                '-c',
+                `cursor "${service.path}"`,
+              ]).execute()
               console.log('[OpenCursor Button] cursor CLI result:', result)
             } catch (error) {
               console.error('[OpenCursor Button] cursor CLI failed:', error)
               // Fallback to open with bundle identifier
               try {
                 console.log('[OpenCursor Button] Trying open -b (bundle id) fallback...')
-                const fallbackResult = await Command.create('open', ['-b', 'com.todesktop.230313mzl4w4u92', service.path]).execute()
+                const fallbackResult = await Command.create('open', [
+                  '-b',
+                  'com.todesktop.230313mzl4w4u92',
+                  service.path,
+                ]).execute()
                 console.log('[OpenCursor Button] Fallback result:', fallbackResult)
               } catch (fallbackError) {
                 console.error('[OpenCursor Button] Fallback method failed:', fallbackError)
@@ -179,10 +207,10 @@ export default function Service() {
           }}
           title="Open native terminal (Warp or Terminal)"
         >
-         <Terminal className="w-4 h-4" />
+          <Terminal className="w-4 h-4" />
         </Button>
       </div>
-      
+
       {/* Only show Logs component since we removed the embedded terminal */}
       <Logs />
     </div>

@@ -59,4 +59,10 @@ pub struct AppSettings {
 #[derive(Debug, Serialize)]
 pub struct ServicesResponse {
     pub services_list: Vec<ServiceData>,
-} 
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServiceMetrics {
+    pub cpu: f64,
+    pub memory_mb: f64,
+}
