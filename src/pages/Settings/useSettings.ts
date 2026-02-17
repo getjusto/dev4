@@ -1,3 +1,4 @@
+import generateId from '@/lib/generateId'
 import {invoke} from '@tauri-apps/api/core'
 import {appConfigDir} from '@tauri-apps/api/path'
 import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-apps/plugin-fs'
@@ -11,10 +12,18 @@ import {useServicesStatus} from './useServicesStatus'
 const isDev = import.meta.env.DEV
 const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
 
+export interface ServiceGroup {
+  id: string
+  name: string
+  services: string[]
+}
+
 export interface AppSettings {
   servicesPath: string
   onServices: Record<string, boolean>
   favoriteServices?: Record<string, boolean>
+  startServicesOnLaunch?: boolean
+  serviceGroups?: ServiceGroup[]
 }
 
 function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): AppSettings {
@@ -193,6 +202,33 @@ export function useCreateSettingsContext() {
     })
   }
 
+  const addServiceGroup = (group: Omit<ServiceGroup, 'id'>) => {
+    setSettings(prev => {
+      const newGroup: ServiceGroup = {...group, id: generateId()}
+      const newSettings = {...prev, serviceGroups: [...(prev.serviceGroups || []), newGroup]}
+      saveSettings(newSettings)
+      return newSettings
+    })
+  }
+
+  const updateServiceGroup = (id: string, updates: Partial<Omit<ServiceGroup, 'id'>>) => {
+    setSettings(prev => {
+      const groups = (prev.serviceGroups || []).map(g => (g.id === id ? {...g, ...updates} : g))
+      const newSettings = {...prev, serviceGroups: groups}
+      saveSettings(newSettings)
+      return newSettings
+    })
+  }
+
+  const deleteServiceGroup = (id: string) => {
+    setSettings(prev => {
+      const groups = (prev.serviceGroups || []).filter(g => g.id !== id)
+      const newSettings = {...prev, serviceGroups: groups}
+      saveSettings(newSettings)
+      return newSettings
+    })
+  }
+
   const status = useServicesStatus(services)
   const processes = useProcesses([...services.servicesList])
   const metrics = useServiceMetrics()
@@ -205,6 +241,9 @@ export function useCreateSettingsContext() {
     services,
     setServiceOn,
     toggleFavorite,
+    addServiceGroup,
+    updateServiceGroup,
+    deleteServiceGroup,
     status,
     processes,
     metrics,

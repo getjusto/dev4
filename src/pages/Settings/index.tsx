@@ -1,10 +1,11 @@
-import {Input} from '@/components/ui/input'
-import PageLayout from '../Layout/PageLayout'
-import {AppSettings} from './useSettings'
 import {Button} from '@/components/ui/button'
-import {useSettings} from './Context'
+import {Input} from '@/components/ui/input'
+import {Switch} from '@/components/ui/switch'
 import {toast} from 'sonner'
+import PageLayout from '../Layout/PageLayout'
+import {useSettings} from './Context'
 import Updates from './Updates'
+import {AppSettings} from './useSettings'
 
 export default function Settings() {
   const {settings, setSettings, isSaving, saveSettings} = useSettings()
@@ -28,6 +29,26 @@ export default function Settings() {
             value={settings.servicesPath}
             onChange={handleChange('servicesPath')}
             placeholder="Enter services path"
+          />
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border p-3">
+          <div className="space-y-0.5">
+            <label htmlFor="startOnLaunch" className="text-sm font-medium">
+              Reanudar servicios al iniciar
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Enciende automáticamente los servicios que estaban activos al cerrar la app
+            </p>
+          </div>
+          <Switch
+            id="startOnLaunch"
+            checked={settings.startServicesOnLaunch !== false}
+            onCheckedChange={(checked: boolean) => {
+              const newSettings = {...settings, startServicesOnLaunch: checked}
+              setSettings(newSettings)
+              saveSettings(newSettings)
+            }}
           />
         </div>
 

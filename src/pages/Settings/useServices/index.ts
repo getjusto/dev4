@@ -1,7 +1,7 @@
-import {useEffect, useState} from 'react'
-import {AppSettings} from '../useSettings'
-import {toast} from 'sonner'
 import {invoke} from '@tauri-apps/api/core'
+import {useEffect, useState} from 'react'
+import {toast} from 'sonner'
+import {AppSettings} from '../useSettings'
 
 export interface ServiceData {
   name: string
@@ -36,7 +36,7 @@ export function useServices(settings: AppSettings) {
   useEffect(() => {
     ;(async () => {
       console.log('checking services via Rust backend')
-      
+
       // Call the Rust command to get all services
       const response = await invoke<ServicesResponse>('get_services_list', {
         settings: {
@@ -44,7 +44,7 @@ export function useServices(settings: AppSettings) {
           onServices: settings.onServices,
         },
       })
-      
+
       // Map the response to match the expected format
       const servicesList: ServiceData[] = response.services_list.map(service => ({
         name: service.name,
@@ -56,7 +56,7 @@ export function useServices(settings: AppSettings) {
         config: service.config,
         startCommand: service.start_command,
       }))
-      
+
       // Prepare start scripts for services that need them (only services category)
       if (servicesList.length > 0) {
         await invoke('prepare_services_start', {
@@ -72,10 +72,11 @@ export function useServices(settings: AppSettings) {
           })),
         })
       }
-      
+
       setServicesList(servicesList)
-      
+
       // Ensure services are running according to their 'on' state on startup
+      const shouldStartServices = settings.startServicesOnLaunch !== false
       const allServices = [...servicesList]
       if (allServices.length > 0) {
         try {
@@ -85,7 +86,7 @@ export function useServices(settings: AppSettings) {
             path: service.path,
             port: service.port,
             full_name: service.fullName,
-            on: service.on,
+            on: shouldStartServices ? service.on : false,
             category: service.category,
             config: service.config,
             start_command: service.startCommand,
@@ -94,7 +95,7 @@ export function useServices(settings: AppSettings) {
           const actions = await invoke<string[]>('ensure_services_running', {
             services: rustServices,
           })
-          
+
           console.log('Startup service management actions:', actions)
         } catch (error) {
           console.error('Failed to manage services on startup:', error)

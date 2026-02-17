@@ -1,4 +1,4 @@
-import {Search, Settings, Star} from 'lucide-react'
+import {Layers, Search, Settings, Star} from 'lucide-react'
 import {useMemo, useState} from 'react'
 
 import {Input} from '@/components/ui/input'
@@ -164,6 +164,14 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/groups">
+                <Layers />
+                <span>Grupos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/settings">

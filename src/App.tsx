@@ -1,14 +1,15 @@
 import {Route, Routes} from 'react-router-dom'
 import './App.css'
-import Settings from './pages/Settings'
+import {useEffect} from 'react'
+import Groups from './pages/Groups'
 import Home from './pages/Home'
 import Layout from './pages/Layout'
-import {SettingsContext} from './pages/Settings/Context'
-import {useCreateSettingsContext} from './pages/Settings/useSettings'
 import LoadingFullScreen from './pages/Layout/LoadingFullScreen'
 import Service from './pages/Service'
-import {useEffect} from 'react'
+import Settings from './pages/Settings'
+import {SettingsContext} from './pages/Settings/Context'
 import {checkForAppUpdates} from './pages/Settings/Updates/check'
+import {useCreateSettingsContext} from './pages/Settings/useSettings'
 
 function App() {
   const settings = useCreateSettingsContext()
@@ -26,6 +27,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="settings" element={<Settings />} />
+          <Route path="groups" element={<Groups />} />
           <Route path="/services/:category/:serviceName" element={<Service />} />
           <Route path="*" element={<Home />} />
         </Routes>
