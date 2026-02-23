@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useRef} from 'react'
 import {ServiceData} from '../useServices'
 import {invoke} from '@tauri-apps/api/core'
 import {fireEvent} from 'react-app-events'
@@ -6,9 +6,6 @@ import {WebviewWindow} from '@tauri-apps/api/webviewWindow'
 
 export function useProcesses(services: ServiceData[]) {
   const outputs = useRef<Record<string, string>>({}).current
-  const [, setUpdateCounter] = useState(0)
-
-  const forceUpdate = () => setUpdateCounter(prev => prev + 1)
 
   const addContent = (service: ServiceData, content: string) => {
     outputs[service.fullName] = content
@@ -21,6 +18,7 @@ export function useProcesses(services: ServiceData[]) {
     try {
       await invoke('clear_service_output', {
         serviceName: service.fullName,
+        servicePath: service.path,
       })
       outputs[service.fullName] = ''
       addContent(service, '')
@@ -36,6 +34,7 @@ export function useProcesses(services: ServiceData[]) {
         try {
           const output = await invoke<string>('get_service_output', {
             serviceName: service.fullName,
+            servicePath: service.path,
           })
           
           if (outputs[service.fullName] !== output) {
@@ -65,8 +64,7 @@ export function useProcesses(services: ServiceData[]) {
       .onCloseRequested(async event => {
         event.preventDefault()
         console.log('close requested')
-        // Services are now managed by Rust, so we don't need to stop them manually here
-        // The Rust exit handler will take care of it
+        // Services are managed by dev5 in the background.
         setTimeout(() => {
           WebviewWindow.getCurrent().destroy()
         }, 500)

@@ -29,7 +29,7 @@ function ServiceStatusComp({service}: {service: ServiceData}) {
 
   return (
     <SwitchSmall
-      checked={status !== 'off'}
+      checked={status === 'on' || status === 'error'}
       className={cn('cursor-pointer', {
         '!bg-green-500': status === 'on',
         '!bg-red-500': status === 'error',

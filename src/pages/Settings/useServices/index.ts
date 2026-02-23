@@ -38,7 +38,6 @@ export function useServices(settings: AppSettings) {
     ;(async () => {
       console.log('checking services via Rust backend')
 
-      // Call the Rust command to get all services
       const response = await invoke<ServicesResponse>('get_services_list', {
         settings: {
           servicesPath: settings.servicesPath,
@@ -46,8 +45,7 @@ export function useServices(settings: AppSettings) {
         },
       })
 
-      // Map the response to match the expected format
-      const servicesList: ServiceData[] = response.services_list.map(service => ({
+      const mappedServices: ServiceData[] = response.services_list.map(service => ({
         name: service.name,
         path: service.path,
         port: service.port,
@@ -58,10 +56,9 @@ export function useServices(settings: AppSettings) {
         startCommand: service.start_command,
       }))
 
-      // Prepare start scripts for services that need them (only services category)
-      if (servicesList.length > 0) {
+      if (mappedServices.length > 0) {
         await invoke('prepare_services_start', {
-          services: servicesList.map(service => ({
+          services: mappedServices.map(service => ({
             name: service.name,
             path: service.path,
             port: service.port,
@@ -74,32 +71,36 @@ export function useServices(settings: AppSettings) {
         })
       }
 
-      setServicesList(servicesList)
+      setServicesList(mappedServices)
 
-      // Ensure services are running only on initial startup, not on every settings change
-      if (!didAutoStart.current && servicesList.length > 0) {
+      // Auto-start runs only once per app boot.
+      // We only start services marked as on and never mass-stop externally started services.
+      if (!didAutoStart.current && mappedServices.length > 0) {
         didAutoStart.current = true
         const shouldStartServices = settings.startServicesOnLaunch !== false
         if (shouldStartServices) {
-          try {
-            const rustServices = servicesList.map(service => ({
-              name: service.name,
-              path: service.path,
-              port: service.port,
-              full_name: service.fullName,
-              on: service.on,
-              category: service.category,
-              config: service.config,
-              start_command: service.startCommand,
-            }))
+          const enabledServices = mappedServices.filter(service => service.on)
+          if (enabledServices.length > 0) {
+            try {
+              const rustServices = enabledServices.map(service => ({
+                name: service.name,
+                path: service.path,
+                port: service.port,
+                full_name: service.fullName,
+                on: service.on,
+                category: service.category,
+                config: service.config,
+                start_command: service.startCommand,
+              }))
 
-            const actions = await invoke<string[]>('ensure_services_running', {
-              services: rustServices,
-            })
+              const actions = await invoke<string[]>('ensure_services_running', {
+                services: rustServices,
+              })
 
-            console.log('Startup service management actions:', actions)
-          } catch (error) {
-            console.error('Failed to manage services on startup:', error)
+              console.log('Startup service management actions:', actions)
+            } catch (error) {
+              console.error('Failed to manage services on startup:', error)
+            }
           }
         }
       }

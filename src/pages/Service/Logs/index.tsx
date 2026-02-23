@@ -15,7 +15,8 @@ interface Props {
 export default function Logs(props: Props) {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
-  const {processes} = useSettings()
+  const {processes, status: allStatus} = useSettings()
+  const runtimeStatus = allStatus[`${category}.${serviceName}`] || 'off'
   const container = useRef<HTMLPreElement>(null)
   const [content, setContent] = useState('')
 
@@ -326,7 +327,7 @@ export default function Logs(props: Props) {
           'font-mono whitespace-pre-wrap break-words',
           props.className,
           {
-            'opacity-50': !service.on,
+            'opacity-50': runtimeStatus === 'off',
           },
         )}
         ref={container}

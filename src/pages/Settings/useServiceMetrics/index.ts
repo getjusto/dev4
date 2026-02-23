@@ -6,7 +6,7 @@ export interface ServiceMetrics {
   memory_mb: number
 }
 
-export function useServiceMetrics() {
+export function useServiceMetrics(servicesPath: string) {
   const [metrics, setMetrics] = useState<Record<string, ServiceMetrics>>({})
 
   useEffect(() => {
@@ -15,7 +15,9 @@ export function useServiceMetrics() {
 
     const fetchMetrics = async () => {
       try {
-        const result = await invoke<Record<string, ServiceMetrics>>('get_service_metrics')
+        const result = await invoke<Record<string, ServiceMetrics>>('get_service_metrics', {
+          servicesPath,
+        })
         if (isMounted) {
           setMetrics(result)
         }
@@ -34,7 +36,7 @@ export function useServiceMetrics() {
       isMounted = false
       clearTimeout(timeoutId)
     }
-  }, [])
+  }, [servicesPath])
 
   return metrics
 }

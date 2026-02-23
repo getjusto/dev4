@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
-import {ServiceData, useServices} from '../useServices'
-import {fetch} from '@tauri-apps/plugin-http'
+import {useServices} from '../useServices'
+import {invoke} from '@tauri-apps/api/core'
 
 export type ServiceStatus = 'on' | 'off' | 'error'
 
@@ -8,62 +8,48 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
   const [status, setStatus] = useState<Record<string, ServiceStatus>>({})
 
   useEffect(() => {
-    console.log('services', services)
-    const timeouts: Record<string, NodeJS.Timeout> = {}
     let isMounted = true
-    const checkStatus = async (service: ServiceData) => {
-      const serviceKey = `${service.category}.${service.name}`
-      const newStatus = await getServiceStatus(service)
 
-      setStatus(prev => {
-        if (prev[serviceKey] === newStatus) {
-          return prev
-        }
-        return {...prev, [serviceKey]: newStatus}
-      })
-
-      timeouts[serviceKey] = setTimeout(() => {
+    const pollStatuses = async () => {
+      if (!services.servicesList.length) {
         if (isMounted) {
-          checkStatus(service)
+          setStatus({})
         }
-      }, 2000)
+        return
+      }
+
+      try {
+        const rustServices = services.servicesList.map(service => ({
+          name: service.name,
+          path: service.path,
+          port: service.port,
+          full_name: service.fullName,
+          on: service.on,
+          category: service.category,
+          config: service.config,
+          start_command: service.startCommand,
+        }))
+
+        const runtimeStatus = await invoke<Record<string, ServiceStatus>>('get_services_runtime_status', {
+          services: rustServices,
+        })
+
+        if (isMounted) {
+          setStatus(runtimeStatus)
+        }
+      } catch (error) {
+        console.error('Failed to get runtime services status:', error)
+      }
     }
 
-    for (const service of [
-      ...services.servicesList,
-    ]) {
-      checkStatus(service)
-    }
+    pollStatuses()
+    const interval = setInterval(pollStatuses, 2000)
 
     return () => {
       isMounted = false
-      const timeoutsArray = Object.values(timeouts)
-      for (const timeout of timeoutsArray) {
-        clearTimeout(timeout)
-      }
+      clearInterval(interval)
     }
-  }, [services])
+  }, [services.servicesList])
 
   return status
-}
-
-async function getServiceStatus(service: ServiceData): Promise<ServiceStatus> {
-  if (!service.on) return 'off'
-  try {
-    await fetchWithTimeout(`http://127.0.0.1:${service.port}`, {}, 5000)
-    return 'on'
-  } catch {
-    return 'error'
-  }
-}
-
-function fetchWithTimeout(url, options = {}, timeout = 5000) {
-  const controller = new AbortController()
-  const signal = controller.signal
-
-  const fetchPromise = fetch(url, {...options, signal})
-
-  const timeoutId = setTimeout(() => controller.abort(), timeout)
-
-  return fetchPromise.finally(() => clearTimeout(timeoutId))
 }

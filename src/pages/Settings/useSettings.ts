@@ -2,7 +2,7 @@ import generateId from '@/lib/generateId'
 import {invoke} from '@tauri-apps/api/core'
 import {appConfigDir} from '@tauri-apps/api/path'
 import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-apps/plugin-fs'
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useState} from 'react'
 import {toast} from 'sonner'
 import {useProcesses} from './useProcesses'
 import {useServiceMetrics} from './useServiceMetrics'
@@ -63,14 +63,6 @@ export function useCreateSettingsContext() {
     onServices: {},
     favoriteServices: {},
   })
-
-  // Ref to track the latest onServices synchronously (avoids stale closures in setServiceOn)
-  const onServicesRef = useRef(settings.onServices)
-
-  // Keep ref in sync when settings load or change externally
-  useEffect(() => {
-    onServicesRef.current = settings.onServices
-  }, [settings.onServices])
 
   const services = useServices(settings)
 
@@ -150,40 +142,40 @@ export function useCreateSettingsContext() {
   }
 
   const setServiceOn = async (category: string, service: string, on: boolean) => {
-    // Update ref synchronously so rapid sequential calls see the latest state
-    onServicesRef.current = {...onServicesRef.current, [`${category}.${service}`]: on}
+    const serviceKey = `${category}.${service}`
 
     setSettings(prev => {
       const newSettings = {
         ...prev,
         onServices: {
           ...(prev.onServices || {}),
-          [`${category}.${service}`]: on,
+          [serviceKey]: on,
         },
       }
       saveSettings(newSettings)
       return newSettings
     })
 
-    // Trigger service management to start/stop services as needed
+    // Trigger service management only for the selected service.
+    // This prevents stopping services started externally through `yarn dev5`.
     try {
-      // Use the ref (not stale servicesList) to get the latest on/off state
-      const updatedServices = services.servicesList.map(s => ({
-        ...s,
-        on: onServicesRef.current[s.fullName] ?? false,
-      }))
+      const targetService = services.servicesList.find(s => s.fullName === serviceKey)
+      if (!targetService) {
+        throw new Error(`Service not found in loaded services: ${serviceKey}`)
+      }
 
-      // Convert to Rust format
-      const rustServices = updatedServices.map(service => ({
-        name: service.name,
-        path: service.path,
-        port: service.port,
-        full_name: service.fullName,
-        on: service.on,
-        category: service.category,
-        config: service.config,
-        start_command: service.startCommand,
-      }))
+      const rustServices = [
+        {
+          name: targetService.name,
+          path: targetService.path,
+          port: targetService.port,
+          full_name: targetService.fullName,
+          on,
+          category: targetService.category,
+          config: targetService.config,
+          start_command: targetService.startCommand,
+        },
+      ]
 
       const actions = await invoke<string[]>('ensure_services_running', {
         services: rustServices,
@@ -248,7 +240,7 @@ export function useCreateSettingsContext() {
 
   const status = useServicesStatus(services)
   const processes = useProcesses([...services.servicesList])
-  const metrics = useServiceMetrics()
+  const metrics = useServiceMetrics(settings.servicesPath)
 
   return {
     settings,

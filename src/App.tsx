@@ -15,7 +15,7 @@ function App() {
   const settings = useCreateSettingsContext()
 
   useEffect(() => {
-    checkForAppUpdates(false)
+    void checkForAppUpdates(false)
   }, [])
 
   if (!settings.loaded) {
