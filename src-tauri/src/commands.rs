@@ -55,14 +55,14 @@ pub async fn ensure_services_running(services: Vec<ServiceData>) -> Result<Vec<S
     if !stop_selectors.is_empty() {
         let args = vec!["stop".to_string(), stop_selectors.join(",")];
         let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("Stopped: {}", stop_selectors.join(", ")));
+        actions.push(format!("yarn dev5 {}", args.join(" ")));
     }
 
     let start_selectors = collect_service_selectors(&services, true);
     if !start_selectors.is_empty() {
         let args = vec!["start".to_string(), start_selectors.join(",")];
         let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("Started: {}", start_selectors.join(", ")));
+        actions.push(format!("yarn dev5 {}", args.join(" ")));
     }
 
     println!("Service management via dev5 completed. Actions: {:?}", actions);

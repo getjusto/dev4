@@ -184,9 +184,7 @@ export function useCreateSettingsContext() {
       console.log('Service management actions:', actions)
 
       if (actions.length > 0) {
-        toast.success('Service management completed', {
-          description: actions.join(', '),
-        })
+        toast.success(actions.join('\n'))
       }
     } catch (error) {
       console.error('Failed to manage services:', error)
