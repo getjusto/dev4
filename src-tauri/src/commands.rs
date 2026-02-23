@@ -149,40 +149,32 @@ pub async fn clear_service_output(
 pub async fn get_services_runtime_status(
     services: Vec<ServiceData>,
 ) -> Result<HashMap<String, String>, String> {
+    if services.is_empty() {
+        return Ok(HashMap::new());
+    }
+
+    let repo_root = repo_root_from_services(&services)?;
     let mut statuses = HashMap::new();
+    let dev5_statuses = match read_dev5_statuses(&repo_root) {
+        Ok(statuses) => Some(statuses),
+        Err(error) => {
+            eprintln!(
+                "Failed to read `dev5 status --json` in {}: {}. Falling back to local probes.",
+                repo_root.display(),
+                error
+            );
+            None
+        }
+    };
 
     for service in services {
-        let repo_root = repo_root_from_service_path(&service.path)?;
-        let pid_path = repo_root
-            .join(".local")
-            .join("pids")
-            .join(format!("{}.json", service.name));
+        let status = dev5_statuses
+            .as_ref()
+            .and_then(|all| all.get(&service.name))
+            .cloned()
+            .unwrap_or_else(|| probe_service_runtime_status(&repo_root, &service.name, service.port));
 
-        let mut is_running = false;
-
-        if let Ok(raw) = fs::read_to_string(&pid_path) {
-            if let Ok(state) = serde_json::from_str::<Dev5PidState>(&raw) {
-                if state.pid > 0 && is_process_alive(state.pid) {
-                    is_running = true;
-                } else {
-                    let _ = fs::remove_file(&pid_path);
-                }
-            }
-        }
-
-        // Keep parity with dev5 status semantics for unmanaged runners.
-        if !is_running && is_port_open(service.port as u16) {
-            is_running = true;
-        }
-
-        statuses.insert(
-            service.full_name.clone(),
-            if is_running {
-                "on".to_string()
-            } else {
-                "off".to_string()
-            },
-        );
+        statuses.insert(service.full_name.clone(), status);
     }
 
     Ok(statuses)
@@ -291,6 +283,13 @@ pub async fn get_service_metrics(
 struct Dev5PidState {
     pid: i32,
     dir_name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct Dev5StatusEntry {
+    dir_name: String,
+    service_name: String,
+    status: String,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -432,6 +431,98 @@ fn is_process_alive(pid: i32) -> bool {
 fn is_port_open(port: u16) -> bool {
     let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST, port);
     TcpStream::connect_timeout(&addr.into(), Duration::from_millis(250)).is_ok()
+}
+
+fn probe_service_runtime_status(repo_root: &Path, service_name: &str, service_port: u32) -> String {
+    let pid_path = repo_root
+        .join(".local")
+        .join("pids")
+        .join(format!("{}.json", service_name));
+
+    let mut is_running = false;
+
+    if let Ok(raw) = fs::read_to_string(&pid_path) {
+        if let Ok(state) = serde_json::from_str::<Dev5PidState>(&raw) {
+            if state.pid > 0 && is_process_alive(state.pid) {
+                is_running = true;
+            } else {
+                let _ = fs::remove_file(&pid_path);
+            }
+        }
+    }
+
+    // Keep parity with dev5 status semantics for unmanaged runners.
+    if !is_running && is_port_open(service_port as u16) {
+        is_running = true;
+    }
+
+    if is_running {
+        "on".to_string()
+    } else {
+        "off".to_string()
+    }
+}
+
+fn normalize_dev5_status(value: &str) -> String {
+    match value {
+        "on" => "on".to_string(),
+        "error" => "error".to_string(),
+        _ => "off".to_string(),
+    }
+}
+
+fn read_dev5_statuses(repo_root: &Path) -> Result<HashMap<String, String>, String> {
+    let args = vec!["status".to_string(), "--json".to_string()];
+
+    let output = match Command::new("./dev5")
+        .args(&args)
+        .current_dir(repo_root)
+        .output()
+    {
+        Ok(output) => output,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            run_dev5_via_login_shell(repo_root, &args)?
+        }
+        Err(err) => {
+            return Err(format!(
+                "Failed to execute `dev5 status --json` in {}: {}",
+                repo_root.display(),
+                err
+            ));
+        }
+    };
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if !output.status.success() {
+        let mut details = vec![format!(
+            "`dev5 status --json` failed in {} with status {}",
+            repo_root.display(),
+            output.status
+        )];
+        details.extend(output_lines(&stdout, &stderr));
+        return Err(details.join("\n"));
+    }
+
+    let entries: Vec<Dev5StatusEntry> = serde_json::from_str(&stdout).map_err(|error| {
+        format!(
+            "Could not parse `dev5 status --json` output: {}\nRaw output:\n{}",
+            error, stdout
+        )
+    })?;
+
+    let mut statuses = HashMap::new();
+    for entry in entries {
+        let normalized = normalize_dev5_status(&entry.status);
+        if !entry.dir_name.is_empty() {
+            statuses.insert(entry.dir_name, normalized.clone());
+        }
+        if !entry.service_name.is_empty() {
+            statuses.entry(entry.service_name).or_insert(normalized);
+        }
+    }
+
+    Ok(statuses)
 }
 
 fn run_dev5_command(repo_root: &Path, args: &[String]) -> Result<Vec<String>, String> {
