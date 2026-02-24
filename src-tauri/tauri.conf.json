@@ -29,7 +29,7 @@
     },
     "updater": {
       "endpoints": [
-        "https://raw.githubusercontent.com/getjusto/dev4/refs/heads/master/latest.json"
+        "https://github.com/getjusto/dev4/releases/latest/download/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM0QTQxNkZDMTM5MzZBQzYKUldUR2FwTVQvQmFrTk9Qc25kVGI3cmVvRjh0RTN2bDBURUJwQzgyK0kyNktJTG5qcHV0MjBlcWMK"
     }

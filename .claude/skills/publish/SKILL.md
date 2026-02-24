@@ -1,5 +1,5 @@
 ---
-name: release
+name: publish
 description: Creates a new release
 ---
 
