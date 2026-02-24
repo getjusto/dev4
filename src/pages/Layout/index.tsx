@@ -1,6 +1,6 @@
 import {SidebarProvider} from '@/components/ui/sidebar'
-import {AppSidebar} from './AppSidebar'
 import {Toaster} from '@/components/ui/sonner'
+import {AppSidebar} from './AppSidebar'
 import CommandBar from './CommandBar'
 
 export default function Layout({children}: {children: React.ReactNode}) {

@@ -1,6 +1,6 @@
 import {Layers, Search, Settings, Star} from 'lucide-react'
 import {useMemo, useState} from 'react'
-
+import {Link, useLocation, useNavigate} from 'react-router-dom'
 import {Input} from '@/components/ui/input'
 import {
   Sidebar,
@@ -17,7 +17,6 @@ import {
 import {SwitchSmall} from '@/components/ui/switch-small'
 import {H4} from '@/components/ui/typography'
 import {cn} from '@/lib/utils'
-import {Link, useLocation, useNavigate} from 'react-router-dom'
 import {useSettings} from '../Settings/Context'
 import {ServiceData} from '../Settings/useServices'
 import {useProvideCommands} from './CommandBar/Context'

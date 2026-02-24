@@ -1,9 +1,9 @@
 import {useCommandState} from 'cmdk'
 import {useEffect, useRef} from 'react'
 import {useOnEvent} from 'react-app-events'
+import {CommandInput} from '@/components/ui/command'
 import {useCommandBarContext} from '../Context'
 import {CommandBarCategory} from '../types'
-import {CommandInput} from '@/components/ui/command'
 
 export interface Props {
   categories: CommandBarCategory[]
@@ -31,7 +31,7 @@ export default function Input(props: Props) {
     const element = document.getElementById(selectedItemId)
     if (!element) return getCommand(props.categories, 0)
     if (!element.dataset.commandIndex) return getCommand(props.categories, 0)
-    return getCommand(props.categories, Number.parseInt(element.dataset.commandIndex))
+    return getCommand(props.categories, Number.parseInt(element.dataset.commandIndex, 10))
   }
 
   useOnEvent('commandBar.selectCurrentQuery', () => {

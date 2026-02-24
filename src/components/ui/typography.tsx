@@ -1,5 +1,5 @@
-import {cn} from '@/lib/utils'
 import React, {forwardRef} from 'react'
+import {cn} from '@/lib/utils'
 
 const H1 = forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(
   (props, ref) => {

@@ -1,11 +1,11 @@
 import {useEffect} from 'react'
+import {CommandDialog, CommandList} from '@/components/ui/command'
 import {useCommandBarContext} from '../Context'
 import {useFilteredCommands} from '../useCommands'
 import ActiveCommandBarContext from './ActiveContext'
 import Input from './Input'
 import NoResults from './NoResults'
 import Options from './Options'
-import {CommandDialog, CommandList} from '@/components/ui/command'
 
 export default function InternalCommandBar() {
   const {open, setOpen, query, setQuery, bottomBar, limitOptionsTo, currentPrompt} =

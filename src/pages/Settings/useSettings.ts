@@ -1,16 +1,27 @@
-import generateId from '@/lib/generateId'
 import {invoke} from '@tauri-apps/api/core'
 import {appConfigDir} from '@tauri-apps/api/path'
 import {BaseDirectory, exists, mkdir, readTextFile, writeTextFile} from '@tauri-apps/plugin-fs'
 import {useEffect, useState} from 'react'
 import {toast} from 'sonner'
+import generateId from '@/lib/generateId'
 import {useProcesses} from './useProcesses'
 import {useServiceMetrics} from './useServiceMetrics'
 import {useServices} from './useServices'
 import {useServicesStatus} from './useServicesStatus'
 
 const isDev = import.meta.env.DEV
-const settingsPath = isDev ? 'path_settings_dev.json' : 'path_settings.json'
+const pathSettingsFile = isDev ? 'path_settings_dev.json' : 'path_settings.json'
+
+interface PathSettings {
+  servicesPath: string
+}
+
+interface ProjectSettings {
+  onServices: Record<string, boolean>
+  favoriteServices?: Record<string, boolean>
+  startServicesOnLaunch?: boolean
+  serviceGroups?: ServiceGroup[]
+}
 
 export interface ServiceGroup {
   id: string
@@ -26,8 +37,12 @@ export interface AppSettings {
   serviceGroups?: ServiceGroup[]
 }
 
-function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): AppSettings {
-  const onServices = {...(raw.onServices || {})}
+function getProjectSettingsPath(servicesPath: string): string {
+  return `${servicesPath}/.local/dev4/settings.json`
+}
+
+function normalizeOnServices(onServices: Record<string, boolean>): Record<string, boolean> {
+  const result = {...onServices}
 
   const legacyKeyMap: Record<string, string> = {
     'justo.main': 'services.justo-server',
@@ -37,21 +52,52 @@ function normalizeSettings(raw: Partial<AppSettings> & Record<string, any>): App
   }
 
   for (const [legacyKey, servicesKey] of Object.entries(legacyKeyMap)) {
-    if (
-      typeof onServices[legacyKey] === 'boolean' &&
-      typeof onServices[servicesKey] !== 'boolean'
-    ) {
-      onServices[servicesKey] = onServices[legacyKey]
+    if (typeof result[legacyKey] === 'boolean' && typeof result[servicesKey] !== 'boolean') {
+      result[servicesKey] = result[legacyKey]
     }
   }
 
-  return {
-    servicesPath: raw.servicesPath || '',
-    onServices,
-    favoriteServices: raw.favoriteServices || {},
-    startServicesOnLaunch: raw.startServicesOnLaunch,
-    serviceGroups: raw.serviceGroups || [],
+  return result
+}
+
+async function loadProjectSettings(servicesPath: string): Promise<ProjectSettings> {
+  const defaults: ProjectSettings = {
+    onServices: {},
+    favoriteServices: {},
+    serviceGroups: [],
   }
+
+  if (!servicesPath) return defaults
+
+  try {
+    const path = getProjectSettingsPath(servicesPath)
+    const fileExists = await exists(path)
+    if (!fileExists) return defaults
+
+    const data = await readTextFile(path)
+    const parsed = JSON.parse(data) as Partial<ProjectSettings>
+    return {
+      onServices: parsed.onServices || {},
+      favoriteServices: parsed.favoriteServices || {},
+      startServicesOnLaunch: parsed.startServicesOnLaunch,
+      serviceGroups: parsed.serviceGroups || [],
+    }
+  } catch (error) {
+    console.error('Failed to load project settings:', error)
+    return defaults
+  }
+}
+
+async function saveProjectSettings(servicesPath: string, settings: ProjectSettings): Promise<void> {
+  if (!servicesPath) return
+
+  const dirPath = `${servicesPath}/.local/dev4`
+  const dirExists = await exists(dirPath)
+  if (!dirExists) {
+    await mkdir(dirPath, {recursive: true})
+  }
+
+  await writeTextFile(getProjectSettingsPath(servicesPath), JSON.stringify(settings, null, 2))
 }
 
 export function useCreateSettingsContext() {
@@ -79,28 +125,54 @@ export function useCreateSettingsContext() {
         await mkdir(`${await appConfigDir()}`)
       }
 
-      // Check if settings file exists
-      const settingsExists = await exists(settingsPath, {baseDir: BaseDirectory.AppConfig})
+      const pathFileExists = await exists(pathSettingsFile, {baseDir: BaseDirectory.AppConfig})
 
-      if (settingsExists) {
-        // Read and parse the settings file
-        const settingsData = await readTextFile(settingsPath, {
+      if (pathFileExists) {
+        const pathData = await readTextFile(pathSettingsFile, {
           baseDir: BaseDirectory.AppConfig,
         })
-        const parsedSettings = normalizeSettings(JSON.parse(settingsData))
+        const parsed = JSON.parse(pathData) as Partial<AppSettings>
+        const servicesPath = parsed.servicesPath || ''
 
-        // If auto-start is disabled, reset all services to off in memory (disk keeps original values)
-        if (parsedSettings.startServicesOnLaunch === false) {
-          for (const key of Object.keys(parsedSettings.onServices)) {
-            parsedSettings.onServices[key] = false
+        // Load project settings from the services repo
+        let projectSettings = await loadProjectSettings(servicesPath)
+
+        // Migration: if old path_settings file has project keys and project file doesn't exist,
+        // use old values as defaults
+        const projectFileExists =
+          servicesPath && (await exists(getProjectSettingsPath(servicesPath)))
+        if (!projectFileExists && parsed.onServices) {
+          projectSettings = {
+            onServices: parsed.onServices || {},
+            favoriteServices: parsed.favoriteServices || {},
+            startServicesOnLaunch: parsed.startServicesOnLaunch,
+            serviceGroups: parsed.serviceGroups || [],
           }
         }
 
-        setSettings(parsedSettings)
+        const onServices = normalizeOnServices(projectSettings.onServices)
+
+        const mergedSettings: AppSettings = {
+          servicesPath,
+          onServices,
+          favoriteServices: projectSettings.favoriteServices || {},
+          startServicesOnLaunch: projectSettings.startServicesOnLaunch,
+          serviceGroups: projectSettings.serviceGroups || [],
+        }
+
+        // If auto-start is disabled, reset all services to off in memory
+        if (mergedSettings.startServicesOnLaunch === false) {
+          for (const key of Object.keys(mergedSettings.onServices)) {
+            mergedSettings.onServices[key] = false
+          }
+        }
+
+        setSettings(mergedSettings)
       } else {
-        // Create the settings file with default values if it doesn't exist
+        // Create the path settings file with default values if it doesn't exist
         try {
-          await writeTextFile(settingsPath, JSON.stringify(settings, null, 2), {
+          const defaultPathSettings: PathSettings = {servicesPath: ''}
+          await writeTextFile(pathSettingsFile, JSON.stringify(defaultPathSettings, null, 2), {
             baseDir: BaseDirectory.AppConfig,
           })
         } catch (writeError) {
@@ -127,10 +199,24 @@ export function useCreateSettingsContext() {
     try {
       setIsSaving(true)
       console.log('saving settings', settingsToSave)
-      // Save settings to a JSON file in the app's config directory
-      await writeTextFile(settingsPath, JSON.stringify(settingsToSave, null, 2), {
+
+      // Save only servicesPath to the app config dir
+      const pathSettings: PathSettings = {servicesPath: settingsToSave.servicesPath}
+      await writeTextFile(pathSettingsFile, JSON.stringify(pathSettings, null, 2), {
         baseDir: BaseDirectory.AppConfig,
       })
+
+      // Save project settings to $servicesPath/.local/dev4/settings.json
+      if (settingsToSave.servicesPath) {
+        const projectSettings: ProjectSettings = {
+          onServices: settingsToSave.onServices,
+          favoriteServices: settingsToSave.favoriteServices,
+          startServicesOnLaunch: settingsToSave.startServicesOnLaunch,
+          serviceGroups: settingsToSave.serviceGroups,
+        }
+        await saveProjectSettings(settingsToSave.servicesPath, projectSettings)
+      }
+
       setIsSaving(false)
     } catch (error) {
       console.error('Failed to save settings:', error)

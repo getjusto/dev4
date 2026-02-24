@@ -1,9 +1,9 @@
 import {createContext, useContext, useEffect, useState} from 'react'
 import {fireEvent} from 'react-app-events'
 import useDeepCompareEffect from 'use-deep-compare-effect'
-import {CommandBarCommand, CommandBarInternalContextType, PromptOptions} from './types'
-import generateId from '@/lib/generateId'
 import {useMousetrap} from '@/hooks/mousetrap'
+import generateId from '@/lib/generateId'
+import {CommandBarCommand, CommandBarInternalContextType, PromptOptions} from './types'
 
 export const CommandBarInternalContext = createContext<CommandBarInternalContextType>(null)
 

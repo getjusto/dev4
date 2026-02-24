@@ -9,7 +9,7 @@ document.addEventListener('keydown', event => {
     // Remove focus from the currently focused element
     if (document.activeElement) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - blur() is not a property of HTMLElement
+      // @ts-expect-error - blur() is not a property of HTMLElement
       document.activeElement.blur()
     }
   }

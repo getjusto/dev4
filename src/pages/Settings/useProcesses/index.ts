@@ -1,8 +1,8 @@
-import {useEffect, useRef} from 'react'
-import {ServiceData} from '../useServices'
 import {invoke} from '@tauri-apps/api/core'
-import {fireEvent} from 'react-app-events'
 import {WebviewWindow} from '@tauri-apps/api/webviewWindow'
+import {useEffect, useRef} from 'react'
+import {fireEvent} from 'react-app-events'
+import {ServiceData} from '../useServices'
 
 export function useProcesses(services: ServiceData[]) {
   const outputs = useRef<Record<string, string>>({}).current
@@ -36,7 +36,7 @@ export function useProcesses(services: ServiceData[]) {
             serviceName: service.fullName,
             servicePath: service.path,
           })
-          
+
           if (outputs[service.fullName] !== output) {
             outputs[service.fullName] = output
             fireEvent(`serviceOutput.${service.fullName}`, {})

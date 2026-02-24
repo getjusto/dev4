@@ -1,8 +1,8 @@
+import {isNil} from 'lodash-es'
 import {startTransition, useEffect, useMemo, useState} from 'react'
 import {useCommandBarContext} from './Context'
 import {commandScoreFilterAndSort} from './commandScore'
 import {CommandBarCategory, CommandBarCommand} from './types'
-import {isNil} from 'lodash-es'
 
 function useFuseSearch(query: string): {
   filteredCommands: CommandBarCommand[]

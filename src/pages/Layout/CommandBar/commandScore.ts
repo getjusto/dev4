@@ -49,8 +49,8 @@ const _PENALTY_DISTANCE_FROM_START = 0.9
 // with the number of tokens.
 const PENALTY_NOT_COMPLETE = 0.99
 
-const IS_GAP_REGEXP = /[\\\/_+.#"@\[\(\{&]/
-const COUNT_GAPS_REGEXP = /[\\\/_+.#"@\[\(\{&]/g
+const IS_GAP_REGEXP = /[\\/_+.#"@[({&]/
+const COUNT_GAPS_REGEXP = /[\\/_+.#"@[({&]/g
 const IS_SPACE_REGEXP = /[\s-]/
 const COUNT_SPACE_REGEXP = /[\s-]/g
 
@@ -156,14 +156,11 @@ function commandScoreInner(
 
 function formatInput(string) {
   // convert all valid space characters to space so they match each other
-  return (
-    string
-      .normalize('NFD')
-      // biome-ignore lint/suspicious/noMisleadingCharacterClass: <explanation>
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(COUNT_SPACE_REGEXP, ' ')
-  )
+  return string
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(COUNT_SPACE_REGEXP, ' ')
 }
 
 export function commandScore(string: string, query: string) {
@@ -179,7 +176,7 @@ export function commandScoreFilterAndSort(items: any[], fields: string[], query:
     .map(item => {
       const scores: number[] = []
 
-      fields.map(field => {
+      for (const field of fields) {
         const value = item[field]
 
         if (Array.isArray(value)) {
@@ -191,7 +188,7 @@ export function commandScoreFilterAndSort(items: any[], fields: string[], query:
           const score = commandScore(value, query)
           scores.push(score)
         }
-      })
+      }
 
       if (scores.length > 0) {
         const score = Math.max(...scores)

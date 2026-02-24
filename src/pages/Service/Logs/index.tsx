@@ -1,12 +1,12 @@
-import {useParams} from 'react-router-dom'
-import {useServiceData, useSettings} from '../../Settings/Context'
 import Ansi from 'ansi-to-react'
-import {useEffect, useRef, useState, useCallback} from 'react'
+import {ChevronDown, ChevronUp, Search, X} from 'lucide-react'
+import {useCallback, useEffect, useRef, useState} from 'react'
 import {useOnEvent} from 'react-app-events'
-import {cn} from '@/lib/utils'
-import {Search, X, ChevronUp, ChevronDown} from 'lucide-react'
+import {useParams} from 'react-router-dom'
 import HighlightedText, {Match} from '@/components/HighlightedText'
+import {cn} from '@/lib/utils'
 import {useProvideCommand} from '@/pages/Layout/CommandBar/Context'
+import {useServiceData, useSettings} from '../../Settings/Context'
 
 interface Props {
   className?: string

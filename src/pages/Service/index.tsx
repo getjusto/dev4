@@ -1,3 +1,7 @@
+import {Command} from '@tauri-apps/plugin-shell'
+import {Code, Cpu, MemoryStick, RotateCcw, Terminal, Trash} from 'lucide-react'
+import {useState} from 'react'
+import {useParams} from 'react-router-dom'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,10 +11,6 @@ import {
 } from '@/components/ui/breadcrumb'
 import {Button} from '@/components/ui/button'
 import {openNativeTerminal} from '@/lib/openTerminal'
-import {Command} from '@tauri-apps/plugin-shell'
-import {Code, Cpu, MemoryStick, RotateCcw, Terminal, Trash} from 'lucide-react'
-import {useState} from 'react'
-import {useParams} from 'react-router-dom'
 import {useProvideCommands} from '../Layout/CommandBar/Context'
 import {useServiceData, useSettings} from '../Settings/Context'
 import Logs from './Logs'
@@ -19,7 +19,7 @@ export default function Service() {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const {setServiceOn, status: allStatus, processes, metrics} = useSettings()
-  const [tab, setTab] = useState<'logs'>('logs') // Only logs tab now
+  const [_tab, setTab] = useState<'logs'>('logs') // Only logs tab now
   const currentStatus = allStatus[`${category}.${serviceName}`] || 'off'
 
   useProvideCommands([

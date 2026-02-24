@@ -1,3 +1,5 @@
+import {Check} from 'lucide-react'
+import {useState} from 'react'
 import {Button} from '@/components/ui/button'
 import {
   Dialog,
@@ -9,8 +11,6 @@ import {
 import {Input} from '@/components/ui/input'
 import {SwitchSmall} from '@/components/ui/switch-small'
 import {cn} from '@/lib/utils'
-import {Check} from 'lucide-react'
-import {useState} from 'react'
 import {useSettings} from '../Settings/Context'
 import {ServiceGroup} from '../Settings/useSettings'
 

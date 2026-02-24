@@ -1,6 +1,6 @@
+import {invoke} from '@tauri-apps/api/core'
 import {useEffect, useState} from 'react'
 import {useServices} from '../useServices'
-import {invoke} from '@tauri-apps/api/core'
 
 export type ServiceStatus = 'on' | 'off' | 'error'
 
@@ -30,9 +30,12 @@ export function useServicesStatus(services: ReturnType<typeof useServices>) {
           start_command: service.startCommand,
         }))
 
-        const runtimeStatus = await invoke<Record<string, ServiceStatus>>('get_services_runtime_status', {
-          services: rustServices,
-        })
+        const runtimeStatus = await invoke<Record<string, ServiceStatus>>(
+          'get_services_runtime_status',
+          {
+            services: rustServices,
+          },
+        )
 
         if (isMounted) {
           setStatus(runtimeStatus)
