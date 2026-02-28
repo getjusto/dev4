@@ -1,11 +1,11 @@
 {
-  "version": "1.3.0",
-  "notes": "Release v1.3.0.",
-  "pub_date": "2026-02-24T13:57:59Z",
+  "version": "1.4.0",
+  "notes": "Release v1.4.0.",
+  "pub_date": "2026-02-28T14:46:49Z",
   "platforms": {
     "darwin-aarch64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUR2FwTVQvQmFrTk5BZHN6UVNWR0FzMmx6N1dySjZaSlNRRDZINGswRkxSUlRWUkpMWU5wNjhWS0VuM0l0QzJmS1FnSmczV2xzMVNQcVArdzV6YVlzRHU0d251eVQ4NXc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcxOTQxNDI2CWZpbGU6SnVzdG8gRGV2NC5hcHAudGFyLmd6CjlWZndaUFBLZGU2VnlEcmZxZ1hxTEkxck9sUWxETStYcWc5R2ZucFdUQTRGektoZHZ6WDBWRndsVWlPQjFKWkpnMjZvcDJ2YWM1cW5keG1NVTVUd0FnPT0K",
-      "url": "https://github.com/getjusto/dev4/releases/download/v1.3.0/Justo.Dev4.app.tar.gz"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUR2FwTVQvQmFrTkdKYVhOU2YyU1JKRVJIN1FpQkhBRXFuNWs3SXFhSWJhR0wxOU1PL3FWTEtYQ1FsUktiOEdqanNHcEJIVkpROVE4NjllaXVkRUxsYVR0V3RKWW0vckFrPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcyMjg5OTQ3CWZpbGU6SnVzdG8gRGV2NC5hcHAudGFyLmd6Cm9PQ2xEcnhqd2tYb2NzQnFjbDc2Q1grVHpKVjF3WE9kZStaT21BUmEySEhYMHc3MWdqSjh5WTRObnd2dDl2WC83VTdyRE9pMnNLd1JKSDJEa1MrR0R3PT0K",
+      "url": "https://github.com/getjusto/dev4/releases/download/v1.4.0/Justo.Dev4.app.tar.gz"
     }
   }
 }
