@@ -263,18 +263,56 @@ export function useCreateSettingsContext() {
         },
       ]
 
+      toast.success(`./dev5 ${on ? 'start' : 'stop'} ${targetService.name}`)
+
       const actions = await invoke<string[]>('ensure_services_running', {
         services: rustServices,
       })
 
       console.log('Service management actions:', actions)
-
-      if (actions.length > 0) {
-        toast.success(actions.join('\n'))
-      }
     } catch (error) {
       console.error('Failed to manage services:', error)
       toast.error('Failed to manage services', {
+        description: `${error}`,
+      })
+    }
+  }
+
+  const stopAllServices = async () => {
+    const onServices: Record<string, boolean> = {}
+    for (const key of Object.keys(settings.onServices || {})) {
+      onServices[key] = false
+    }
+
+    setSettings(prev => {
+      const newSettings = {...prev, onServices}
+      saveSettings(newSettings)
+      return newSettings
+    })
+
+    try {
+      const rustServices = services.servicesList.map(s => ({
+        name: s.name,
+        path: s.path,
+        port: s.port,
+        full_name: s.fullName,
+        on: false,
+        category: s.category,
+        config: s.config,
+        start_command: s.startCommand,
+      }))
+
+      const names = rustServices.map(s => s.name).join(',')
+      toast.success(`./dev5 stop ${names}`)
+
+      const actions = await invoke<string[]>('ensure_services_running', {
+        services: rustServices,
+      })
+
+      console.log('Stop all services actions:', actions)
+    } catch (error) {
+      console.error('Failed to stop all services:', error)
+      toast.error('Failed to stop all services', {
         description: `${error}`,
       })
     }
@@ -333,6 +371,7 @@ export function useCreateSettingsContext() {
     saveSettings,
     services,
     setServiceOn,
+    stopAllServices,
     toggleFavorite,
     addServiceGroup,
     updateServiceGroup,

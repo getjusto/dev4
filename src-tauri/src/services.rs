@@ -61,7 +61,7 @@ pub async fn get_services_in_services(settings: &AppSettings) -> Result<Vec<Serv
                             on,
                             category: "services".to_string(),
                             config,
-                            start_command: format!("yarn dev5 start {}", service_name),
+                            start_command: format!("./dev5 start {}", service_name),
                         });
                     }
                     Err(e) => {

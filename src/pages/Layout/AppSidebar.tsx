@@ -1,4 +1,4 @@
-import {Layers, Search, Settings, Star} from 'lucide-react'
+import {Layers, Search, Settings, Square, Star} from 'lucide-react'
 import {useMemo, useState} from 'react'
 import {Link, useLocation, useNavigate} from 'react-router-dom'
 import {Input} from '@/components/ui/input'
@@ -84,7 +84,7 @@ function ServiceItem({item, isActive}: {item: ServiceData; isActive: boolean}) {
 }
 
 export function AppSidebar() {
-  const {services, settings} = useSettings()
+  const {services, settings, stopAllServices} = useSettings()
   const location = useLocation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -163,6 +163,12 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton className="cursor-pointer" onClick={stopAllServices}>
+              <Square />
+              <span>Stop All</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/groups">

@@ -55,14 +55,14 @@ pub async fn ensure_services_running(services: Vec<ServiceData>) -> Result<Vec<S
     if !stop_selectors.is_empty() {
         let args = vec!["stop".to_string(), stop_selectors.join(",")];
         let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("yarn dev5 {}", args.join(" ")));
+        actions.push(format!("./dev5 {}", args.join(" ")));
     }
 
     let start_selectors = collect_service_selectors(&services, true);
     if !start_selectors.is_empty() {
         let args = vec!["start".to_string(), start_selectors.join(",")];
         let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("yarn dev5 {}", args.join(" ")));
+        actions.push(format!("./dev5 {}", args.join(" ")));
     }
 
     println!("Service management via dev5 completed. Actions: {:?}", actions);
@@ -73,7 +73,7 @@ pub async fn ensure_services_running(services: Vec<ServiceData>) -> Result<Vec<S
 #[tauri::command]
 pub async fn stop_all_services_command() -> Result<Vec<String>, String> {
     Ok(vec![
-        "dev4 no longer stops services directly. Use `yarn dev5 stop <services>`.".to_string(),
+        "dev4 no longer stops services directly. Use `./dev5 stop <services>`.".to_string(),
     ])
 }
 
@@ -526,8 +526,7 @@ fn read_dev5_statuses(repo_root: &Path) -> Result<HashMap<String, String>, Strin
 }
 
 fn run_dev5_command(repo_root: &Path, args: &[String]) -> Result<Vec<String>, String> {
-    let direct_output = Command::new("yarn")
-        .arg("dev5")
+    let direct_output = Command::new("./dev5")
         .args(args)
         .current_dir(repo_root)
         .output();
@@ -539,7 +538,7 @@ fn run_dev5_command(repo_root: &Path, args: &[String]) -> Result<Vec<String>, St
         }
         Err(err) => {
             return Err(format!(
-                "Failed to execute `yarn dev5 {}` in {}: {}",
+                "Failed to execute `./dev5 {}` in {}: {}",
                 args.join(" "),
                 repo_root.display(),
                 err
@@ -555,7 +554,7 @@ fn run_dev5_command(repo_root: &Path, args: &[String]) -> Result<Vec<String>, St
         Ok(lines)
     } else {
         let mut details = vec![format!(
-            "`yarn dev5 {}` failed in {} with status {}",
+            "`./dev5 {}` failed in {} with status {}",
             args.join(" "),
             repo_root.display(),
             output.status
@@ -571,7 +570,7 @@ fn run_dev5_via_login_shell(
 ) -> Result<std::process::Output, String> {
     let mut command = String::from("cd ");
     command.push_str(&shell_quote(&repo_root.display().to_string()));
-    command.push_str(" && yarn dev5");
+    command.push_str(" && ./dev5");
 
     for arg in args {
         command.push(' ');
