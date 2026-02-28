@@ -5,6 +5,7 @@ import {check} from '@tauri-apps/plugin-updater'
 export async function checkForAppUpdates(onUserClick = false) {
   try {
     const update = await check()
+    console.log('Update check result:', JSON.stringify(update, null, 2))
     if (!update || !update.available) {
       if (onUserClick) {
         await message('Estás en la última versión.', {
