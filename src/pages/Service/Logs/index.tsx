@@ -216,13 +216,13 @@ export default function Logs(props: Props) {
   }, [currentMatch, searchQuery])
 
   useProvideCommand({
-    title: 'Limpiar logs',
+    title: 'Clear logs',
     action: () => {
       if (service) {
         processes.resetOutput(service)
       }
     },
-    category: 'Servicio actual',
+    category: 'Current service',
     defaultScore: 1.9,
     dependencies: [serviceName],
     hotkeys: ['mod+l'],

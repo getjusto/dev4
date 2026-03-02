@@ -1,3 +1,4 @@
+import {ThemeProvider} from 'next-themes'
 import {Route, Routes} from 'react-router-dom'
 import './App.css'
 import {useEffect} from 'react'
@@ -23,16 +24,18 @@ function App() {
   }
 
   return (
-    <SettingsContext.Provider value={settings}>
-      <Layout>
-        <Routes>
-          <Route path="settings" element={<Settings />} />
-          <Route path="groups" element={<Groups />} />
-          <Route path="/services/:category/:serviceName" element={<Service />} />
-          <Route path="*" element={<Home />} />
-        </Routes>
-      </Layout>
-    </SettingsContext.Provider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="dev4-theme">
+      <SettingsContext.Provider value={settings}>
+        <Layout>
+          <Routes>
+            <Route path="settings" element={<Settings />} />
+            <Route path="groups" element={<Groups />} />
+            <Route path="/services/:category/:serviceName" element={<Service />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
+        </Layout>
+      </SettingsContext.Provider>
+    </ThemeProvider>
   )
 }
 

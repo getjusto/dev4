@@ -51,19 +51,19 @@ export default function GroupForm({open, onClose, group}: GroupFormProps) {
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{group ? 'Editar grupo' : 'Crear grupo'}</DialogTitle>
+          <DialogTitle>{group ? 'Edit group' : 'Create group'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <Input
-            placeholder="Nombre del grupo"
+            placeholder="Group name"
             value={name}
             onChange={e => setName(e.target.value)}
             autoFocus
           />
 
           <div className="space-y-1">
-            <p className="text-sm font-medium">Servicios</p>
+            <p className="text-sm font-medium">Services</p>
             <div className="max-h-64 overflow-auto space-y-1 rounded-md border p-2">
               {services.servicesList.map(s => {
                 const key = `${s.category}.${s.name}`
@@ -108,16 +108,16 @@ export default function GroupForm({open, onClose, group}: GroupFormProps) {
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground">{selected.size} seleccionados</p>
+            <p className="text-xs text-muted-foreground">{selected.size} selected</p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button onClick={handleSave} disabled={!name.trim() || selected.size === 0}>
-            {group ? 'Guardar' : 'Crear'}
+            {group ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>

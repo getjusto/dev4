@@ -40,14 +40,14 @@ export default function GroupCard({group, onEdit}: GroupCardProps) {
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={onEdit} title="Editar grupo">
+          <Button variant="ghost" size="sm" onClick={onEdit} title="Edit group">
             <Pencil className="h-3.5 w-3.5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => deleteServiceGroup(group.id)}
-            title="Eliminar grupo"
+            title="Delete group"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -57,11 +57,11 @@ export default function GroupCard({group, onEdit}: GroupCardProps) {
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={() => handleToggleAll(true)}>
           <Play className="h-3.5 w-3.5" />
-          Encender todos
+          Start all
         </Button>
         <Button variant="outline" size="sm" onClick={() => handleToggleAll(false)}>
           <Power className="h-3.5 w-3.5" />
-          Apagar todos
+          Stop all
         </Button>
       </div>
     </div>

@@ -26,15 +26,15 @@ export default function Groups() {
   useProvideCommands(
     groups.flatMap(group => [
       {
-        title: `Encender grupo: ${group.name}`,
+        title: `Start group: ${group.name}`,
         action: () => handleToggleGroup(group, true),
-        category: 'Grupos',
+        category: 'Groups',
         dependencies: [groups],
       },
       {
-        title: `Apagar grupo: ${group.name}`,
+        title: `Stop group: ${group.name}`,
         action: () => handleToggleGroup(group, false),
-        category: 'Grupos',
+        category: 'Groups',
         dependencies: [groups],
       },
     ]),
@@ -42,18 +42,18 @@ export default function Groups() {
 
   return (
     <PageLayout
-      title="Grupos de Servicios"
-      subtitle="Crea grupos para encender o apagar múltiples servicios a la vez."
+      title="Service Groups"
+      subtitle="Create groups to start or stop multiple services at once."
     >
       <div className="space-y-4">
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
-          Crear grupo
+          Create group
         </Button>
 
         {groups.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            No hay grupos creados. Crea uno para empezar.
+            No groups created yet. Create one to get started.
           </p>
         )}
 

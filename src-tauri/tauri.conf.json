@@ -10,13 +10,14 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
         "width": 1200,
         "height": 800,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "backgroundColor": "#000000"
+        "transparent": true
       }
     ],
     "security": {

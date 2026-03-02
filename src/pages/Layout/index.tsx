@@ -1,4 +1,4 @@
-import {SidebarProvider} from '@/components/ui/sidebar'
+import {SidebarInset, SidebarProvider} from '@/components/ui/sidebar'
 import {Toaster} from '@/components/ui/sonner'
 import {AppSidebar} from './AppSidebar'
 import CommandBar from './CommandBar'
@@ -9,7 +9,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
       <CommandBar>
         <SidebarProvider>
           <AppSidebar />
-          <main className="flex-1 h-screen flex flex-col w-full overflow-hidden">{children}</main>
+          <SidebarInset className="h-[calc(100vh-1rem)] overflow-hidden">{children}</SidebarInset>
         </SidebarProvider>
         <Toaster />
       </CommandBar>

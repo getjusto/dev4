@@ -15,7 +15,6 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import {SwitchSmall} from '@/components/ui/switch-small'
-import {H4} from '@/components/ui/typography'
 import {cn} from '@/lib/utils'
 import {useSettings} from '../Settings/Context'
 import {ServiceData} from '../Settings/useServices'
@@ -68,8 +67,8 @@ function ServiceItem({item, isActive}: {item: ServiceData; isActive: boolean}) {
       <SidebarMenuButton asChild isActive={isActive}>
         <Link to={`/services/services/${item.name}`}>
           <ServiceStatusComp service={item} />
-          <span className="flex-1">{item.name}</span>
-          <div className="ml-auto flex items-center gap-1.5">
+          <span className="flex-1 truncate">{item.name}</span>
+          <div className="ml-auto flex shrink-0 items-center gap-1.5">
             {item.port && (
               <span className="text-xs font-bold rounded-md px-1.5 py-0.5 bg-muted-foreground/10">
                 {item.port}
@@ -105,11 +104,11 @@ export function AppSidebar() {
 
   useProvideCommands(
     allServices.map(service => ({
-      title: `Entrar a ${service.category} ${service.name}`,
+      title: `Go to ${service.category} ${service.name}`,
       action: () => {
         navigate(`/services/${service.category}/${service.name}`)
       },
-      category: 'Servicios',
+      category: 'Services',
       dependencies: [],
     })),
   )
@@ -118,29 +117,33 @@ export function AppSidebar() {
     location.pathname.includes(`/services/${item.category}/${item.name}`)
 
   return (
-    <Sidebar>
+    <Sidebar variant="inset">
       <SidebarHeader>
-        <div className="h-5" data-tauri-drag-region />
-        <Link to="/">
-          <H4 className="text-center" data-tauri-drag-region>
-            Justo Dev4
-          </H4>
-        </Link>
+        <div className="flex items-center -mt-[12.5px]" data-tauri-drag-region>
+          <div className="w-[70px]" />
+          <div>
+            <Link to="/">
+              <span className="text-sm font-semibold" data-tauri-drag-region>
+                Justo Dev4
+              </span>
+            </Link>
+          </div>
+        </div>
         <CommandsButton />
-        <div className="relative px-2">
-          <Search className="absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar servicio..."
+            placeholder="Search service..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="h-7 pl-7 text-xs"
+            className="h-7 pl-7 text-xs bg-background"
           />
         </div>
       </SidebarHeader>
       <SidebarContent>
         {favoriteServices.length > 0 && (
           <SidebarGroup>
-            <SidebarGroupLabel>Favoritos</SidebarGroupLabel>
+            <SidebarGroupLabel>Favorites</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {favoriteServices.map(item => (
@@ -173,7 +176,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <Link to="/groups">
                 <Layers />
-                <span>Grupos</span>
+                <span>Groups</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

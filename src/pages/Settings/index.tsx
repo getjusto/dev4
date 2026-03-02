@@ -18,7 +18,7 @@ export default function Settings() {
   }
 
   return (
-    <PageLayout title="Settings" subtitle="Ingresa el path del monorepo services.">
+    <PageLayout title="Settings" subtitle="Enter the path to the services monorepo.">
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="servicesPath" className="text-sm font-medium">
@@ -35,10 +35,10 @@ export default function Settings() {
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div className="space-y-0.5">
             <label htmlFor="startOnLaunch" className="text-sm font-medium">
-              Reanudar servicios al iniciar
+              Resume services on launch
             </label>
             <p className="text-xs text-muted-foreground">
-              Enciende automáticamente los servicios que estaban activos al cerrar la app
+              Automatically start services that were active when the app was closed
             </p>
           </div>
           <Switch
@@ -56,12 +56,12 @@ export default function Settings() {
           <Button
             onClick={() => {
               saveSettings()
-              toast.info('Configuraciones guardadas correctamente')
+              toast.info('Settings saved successfully')
             }}
             disabled={isSaving}
             className="mt-4"
           >
-            {isSaving ? 'Guardando...' : 'Guadar'}
+            {isSaving ? 'Saving...' : 'Save'}
           </Button>
           <Updates />
         </div>

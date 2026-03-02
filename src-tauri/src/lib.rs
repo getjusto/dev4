@@ -8,9 +8,6 @@ mod commands;
 use types::{ServiceProcesses, ServiceProcessesState};
 use commands::*;
 
-
-
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -36,6 +33,18 @@ pub fn run() {
             get_services_runtime_status,
             get_service_metrics
         ])
+        .setup(|app| {
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::Manager;
+                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+
+                let window = app.get_webview_window("main").unwrap();
+                apply_vibrancy(&window, NSVisualEffectMaterial::Sidebar, None, None)
+                    .expect("Failed to apply vibrancy");
+            }
+            Ok(())
+        })
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
         .run(|_, _| {});

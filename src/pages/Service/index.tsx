@@ -29,12 +29,12 @@ export default function Service() {
         setTab('logs')
       },
       defaultScore: 2,
-      category: 'Servicio actual',
+      category: 'Current service',
       dependencies: [serviceName],
       hotkeys: ['mod+1'],
     },
     {
-      title: 'Abrir terminal nativo',
+      title: 'Open native terminal',
       defaultScore: 2,
       action: async () => {
         try {
@@ -43,32 +43,32 @@ export default function Service() {
           console.error('Failed to open native terminal:', error)
         }
       },
-      category: 'Servicio actual',
+      category: 'Current service',
       dependencies: [serviceName],
       hotkeys: ['mod+2'],
     },
     {
-      title: currentStatus === 'off' ? 'Prender servicio' : 'Apagar servicio',
+      title: currentStatus === 'off' ? 'Start service' : 'Stop service',
       action: () => {
         setServiceOn(category, serviceName, currentStatus === 'off')
       },
-      category: 'Servicio actual',
+      category: 'Current service',
       dependencies: [serviceName, currentStatus],
       hotkeys: ['mod+o'],
     },
     {
-      title: 'Reiniciar servicio',
+      title: 'Restart service',
       action: async () => {
         await setServiceOn(category, serviceName, false)
         await new Promise(resolve => setTimeout(resolve, 500))
         await setServiceOn(category, serviceName, true)
       },
-      category: 'Servicio actual',
+      category: 'Current service',
       dependencies: [serviceName],
       hotkeys: ['mod+r'],
     },
     {
-      title: 'Abrir en cursor',
+      title: 'Open in Cursor',
       action: async () => {
         console.log('[OpenCursor Command] Starting...', {path: service.path})
         try {
@@ -95,7 +95,7 @@ export default function Service() {
           }
         }
       },
-      category: 'Servicio actual',
+      category: 'Current service',
       dependencies: [serviceName],
       hotkeys: ['mod+p'],
     },
@@ -108,7 +108,7 @@ export default function Service() {
   return (
     <div className="flex flex-col overflow-hidden h-full" key={`${category}.${serviceName}`}>
       <div
-        className="flex justify-between items-center space-x-2 p-5 bg-sidebar"
+        className="flex justify-between items-center space-x-2 p-5 bg-muted/50"
         data-tauri-drag-region
       >
         <Breadcrumb>
