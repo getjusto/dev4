@@ -474,23 +474,7 @@ fn normalize_dev5_status(value: &str) -> String {
 fn read_dev5_statuses(repo_root: &Path) -> Result<HashMap<String, String>, String> {
     let args = vec!["status".to_string(), "--json".to_string()];
 
-    let output = match Command::new("./dev5")
-        .args(&args)
-        .current_dir(repo_root)
-        .output()
-    {
-        Ok(output) => output,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            run_dev5_via_login_shell(repo_root, &args)?
-        }
-        Err(err) => {
-            return Err(format!(
-                "Failed to execute `dev5 status --json` in {}: {}",
-                repo_root.display(),
-                err
-            ));
-        }
-    };
+    let output = run_dev5_via_login_shell(repo_root, &args)?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -526,25 +510,7 @@ fn read_dev5_statuses(repo_root: &Path) -> Result<HashMap<String, String>, Strin
 }
 
 fn run_dev5_command(repo_root: &Path, args: &[String]) -> Result<Vec<String>, String> {
-    let direct_output = Command::new("./dev5")
-        .args(args)
-        .current_dir(repo_root)
-        .output();
-
-    let output = match direct_output {
-        Ok(output) => output,
-        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
-            run_dev5_via_login_shell(repo_root, args)?
-        }
-        Err(err) => {
-            return Err(format!(
-                "Failed to execute `./dev5 {}` in {}: {}",
-                args.join(" "),
-                repo_root.display(),
-                err
-            ));
-        }
-    };
+    let output = run_dev5_via_login_shell(repo_root, args)?;
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
