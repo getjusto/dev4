@@ -506,7 +506,7 @@ fn run_dev5_via_login_shell(
     }
 
     Command::new("/bin/zsh")
-        .arg("-lc")
+        .arg("-lic")
         .arg(command)
         .output()
         .map_err(|err| format!("Failed to execute dev5 via login shell: {}", err))
