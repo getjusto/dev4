@@ -62,6 +62,12 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: ~2.10.0
         version: 2.10.0
+      '@xterm/addon-fit':
+        specifier: ^0.11.0
+        version: 0.11.0
+      '@xterm/xterm':
+        specifier: ^6.0.0
+        version: 6.0.0
       ansi-to-react:
         specifier: ^6.1.6
         version: 6.1.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -98,6 +104,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      react-resizable-panels:
+        specifier: ^4.7.0
+        version: 4.7.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom:
         specifier: ^7.4.0
         version: 7.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -110,6 +119,9 @@ importers:
       tailwind-merge:
         specifier: ^3.0.2
         version: 3.0.2
+      tauri-pty:
+        specifier: ^0.2.1
+        version: 0.2.1
       tw-animate-css:
         specifier: ^1.2.4
         version: 1.2.4
@@ -1149,6 +1161,12 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
+  '@xterm/addon-fit@0.11.0':
+    resolution: {integrity: sha512-jYcgT6xtVYhnhgxh3QgYDnnNMYTcf8ElbxxFzX0IZo+vabQqSPAjC3c1wJrKB5E19VwQei89QCiZZP86DCPF7g==}
+
+  '@xterm/xterm@6.0.0':
+    resolution: {integrity: sha512-TQwDdQGtwwDt+2cgKDLn0IRaSxYu1tSUjgKarSDkUM0ZNiSRXFpjxEsvc/Zgc5kq5omJ+V0a8/kIM2WD3sMOYg==}
+
   anser@1.4.10:
     resolution: {integrity: sha512-hCv9AqTQ8ycjpSd3upOJd7vFwW1JaoYQ7tpham03GJ1ca8/65rqn0RpaWpItOAd6ylW9wAw6luXYPJIyPFVOww==}
 
@@ -1579,6 +1597,12 @@ packages:
       '@types/react':
         optional: true
 
+  react-resizable-panels@4.7.0:
+    resolution: {integrity: sha512-QJTeh8KJR6lKzDwVez+WGPPUPuarIjR3ptg23thJ0G5dAMYJH4iSN1AnNY0DuSP+PgH8s9eYfwrR7AlmX6TvYA==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
   react-router-dom@7.4.0:
     resolution: {integrity: sha512-VlksBPf3n2bijPvnA7nkTsXxMAKOj+bWp4R9c3i+bnwlSOFAGOkJkKhzy/OsRkWaBMICqcAl1JDzh9ZSOze9CA==}
     engines: {node: '>=20.0.0'}
@@ -1658,6 +1682,9 @@ packages:
   tapable@2.2.1:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
+
+  tauri-pty@0.2.1:
+    resolution: {integrity: sha512-h2/uBWkgzO1fpdTS4hDz5LcDYjgmPdy2Renj9m2bukht1rxmHKmt/ciUo9wenK3uPrGBHrr2/QKGYrEmyAYwcw==}
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -2603,6 +2630,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@xterm/addon-fit@0.11.0': {}
+
+  '@xterm/xterm@6.0.0': {}
+
   anser@1.4.10: {}
 
   ansi-to-react@6.1.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
@@ -2998,6 +3029,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.19
 
+  react-resizable-panels@4.7.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
   react-router-dom@7.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
@@ -3091,6 +3127,10 @@ snapshots:
   tailwindcss@4.0.15: {}
 
   tapable@2.2.1: {}
+
+  tauri-pty@0.2.1:
+    dependencies:
+      '@tauri-apps/api': 2.10.1
 
   tslib@2.8.1: {}
 

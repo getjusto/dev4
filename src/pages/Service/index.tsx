@@ -1,6 +1,6 @@
 import {Command} from '@tauri-apps/plugin-shell'
-import {Code, Cpu, MemoryStick, RotateCcw, Terminal, Trash} from 'lucide-react'
-import {useState} from 'react'
+import {Code, Cpu, MemoryStick, RotateCcw, Terminal as TerminalIcon, Trash} from 'lucide-react'
+import {type MouseEvent as ReactMouseEvent, useCallback, useRef, useState} from 'react'
 import {useParams} from 'react-router-dom'
 import {
   Breadcrumb,
@@ -10,16 +10,66 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import {Button} from '@/components/ui/button'
-import {openNativeTerminal} from '@/lib/openTerminal'
 import {useProvideCommands} from '../Layout/CommandBar/Context'
 import {useServiceData, useSettings} from '../Settings/Context'
 import Logs from './Logs'
+import Terminal from './Terminal'
 
 export default function Service() {
   const {serviceName, category} = useParams()
   const service = useServiceData(serviceName, category)
   const {setServiceOn, status: allStatus, processes, metrics} = useSettings()
   const [_tab, setTab] = useState<'logs'>('logs') // Only logs tab now
+  const terminalOpenMap = useRef<Record<string, boolean>>({})
+  const serviceKey = `${category}.${serviceName}`
+  const terminalOpen = terminalOpenMap.current[serviceKey] ?? false
+  const [, forceRender] = useState(0)
+  const setTerminalOpen = useCallback(
+    (value: boolean | ((prev: boolean) => boolean)) => {
+      const current = terminalOpenMap.current[serviceKey] ?? false
+      const next = typeof value === 'function' ? value(current) : value
+      terminalOpenMap.current[serviceKey] = next
+      forceRender(n => n + 1)
+    },
+    [serviceKey],
+  )
+  const terminalEverOpenedMap = useRef<Record<string, boolean>>({})
+  const terminalEverOpened = terminalEverOpenedMap.current[serviceKey] ?? false
+  if (terminalOpen && !terminalEverOpened) {
+    terminalEverOpenedMap.current[serviceKey] = true
+  }
+  const terminalHeightMap = useRef<Record<string, number>>({})
+  const terminalHeight = terminalHeightMap.current[serviceKey] ?? 250
+  const [isDragging, setIsDragging] = useState(false)
+
+  const handleDragStart = useCallback(
+    (e: ReactMouseEvent) => {
+      e.preventDefault()
+      setIsDragging(true)
+      const startY = e.clientY
+      const startHeight = terminalHeightMap.current[serviceKey] ?? 250
+
+      const onMouseMove = (ev: globalThis.MouseEvent) => {
+        const newHeight = Math.max(
+          100,
+          Math.min(startHeight + (startY - ev.clientY), window.innerHeight - 200),
+        )
+        terminalHeightMap.current[serviceKey] = newHeight
+        forceRender(n => n + 1)
+      }
+
+      const onMouseUp = () => {
+        setIsDragging(false)
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUp)
+      }
+
+      document.addEventListener('mousemove', onMouseMove)
+      document.addEventListener('mouseup', onMouseUp)
+    },
+    [serviceKey],
+  )
+
   const currentStatus = allStatus[`${category}.${serviceName}`] || 'off'
 
   useProvideCommands([
@@ -34,14 +84,10 @@ export default function Service() {
       hotkeys: ['mod+1'],
     },
     {
-      title: 'Open native terminal',
+      title: 'Toggle terminal',
       defaultScore: 2,
-      action: async () => {
-        try {
-          await openNativeTerminal(service.path)
-        } catch (error) {
-          console.error('Failed to open native terminal:', error)
-        }
+      action: () => {
+        setTerminalOpen(prev => !prev)
       },
       category: 'Current service',
       dependencies: [serviceName],
@@ -66,6 +112,16 @@ export default function Service() {
       category: 'Current service',
       dependencies: [serviceName],
       hotkeys: ['mod+r'],
+    },
+    {
+      title: terminalOpen ? 'Close embedded terminal' : 'Open embedded terminal',
+      action: () => {
+        setTerminalOpen(prev => !prev)
+      },
+      defaultScore: 2,
+      category: 'Current service',
+      dependencies: [serviceName, terminalOpen],
+      hotkeys: ['mod+j'],
     },
     {
       title: 'Open in Cursor',
@@ -198,21 +254,38 @@ export default function Service() {
         <Button
           variant="outline"
           size="sm"
-          onClick={async () => {
-            try {
-              await openNativeTerminal(service.path)
-            } catch (error) {
-              console.error('Failed to open native terminal:', error)
-            }
-          }}
-          title="Open native terminal (Warp or Terminal)"
+          onClick={() => setTerminalOpen(prev => !prev)}
+          title="Toggle terminal (⌘J)"
         >
-          <Terminal className="w-4 h-4" />
+          <TerminalIcon className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Only show Logs component since we removed the embedded terminal */}
-      <Logs />
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <Logs />
+      </div>
+      <div
+        className={`overflow-hidden ${isDragging ? '' : 'transition-[height] duration-200 ease-in-out'}`}
+        style={{height: terminalOpen ? terminalHeight : 0}}
+      >
+        {terminalOpen && (
+          <div
+            role="separator"
+            aria-valuenow={terminalHeight}
+            className="h-[4px] cursor-row-resize bg-border hover:bg-primary/30 active:bg-primary/40"
+            onMouseDown={handleDragStart}
+          />
+        )}
+        {terminalEverOpened && (
+          <div style={{height: terminalOpen ? terminalHeight - 4 : 0}} className="overflow-hidden">
+            <Terminal
+              sessionKey={serviceKey}
+              cwd={service.path}
+              onClose={() => setTerminalOpen(false)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import {invoke} from '@tauri-apps/api/core'
 import {WebviewWindow} from '@tauri-apps/api/webviewWindow'
 import {useEffect, useRef} from 'react'
 import {fireEvent} from 'react-app-events'
+import {killAllSessions} from '@/pages/Service/Terminal/ptysessions'
 import {ServiceData} from '../useServices'
 
 export function useProcesses(services: ServiceData[]) {
@@ -64,6 +65,7 @@ export function useProcesses(services: ServiceData[]) {
       .onCloseRequested(async event => {
         event.preventDefault()
         console.log('close requested')
+        killAllSessions()
         // Services are managed by dev5 in the background.
         setTimeout(() => {
           WebviewWindow.getCurrent().destroy()
