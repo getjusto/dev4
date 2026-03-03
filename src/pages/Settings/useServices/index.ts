@@ -74,7 +74,6 @@ export function useServices(settings: AppSettings) {
       setServicesList(mappedServices)
 
       // Auto-start runs only once per app boot.
-      // We only start services marked as on and never mass-stop externally started services.
       if (!didAutoStart.current && mappedServices.length > 0) {
         didAutoStart.current = true
         const shouldStartServices = settings.startServicesOnLaunch !== false
@@ -82,24 +81,12 @@ export function useServices(settings: AppSettings) {
           const enabledServices = mappedServices.filter(service => service.on)
           if (enabledServices.length > 0) {
             try {
-              const rustServices = enabledServices.map(service => ({
-                name: service.name,
-                path: service.path,
-                port: service.port,
-                full_name: service.fullName,
-                on: service.on,
-                category: service.category,
-                config: service.config,
-                start_command: service.startCommand,
-              }))
-
-              const actions = await invoke<string[]>('ensure_services_running', {
-                services: rustServices,
+              await invoke('dev5_start', {
+                servicePath: enabledServices[0].path,
+                names: enabledServices.map(s => s.name),
               })
-
-              console.log('Startup service management actions:', actions)
             } catch (error) {
-              console.error('Failed to manage services on startup:', error)
+              console.error('Failed to start services on startup:', error)
             }
           }
         }

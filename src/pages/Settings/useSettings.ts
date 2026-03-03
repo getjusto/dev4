@@ -242,34 +242,19 @@ export function useCreateSettingsContext() {
       return newSettings
     })
 
-    // Trigger service management only for the selected service.
-    // This prevents stopping services started externally through `yarn dev5`.
     try {
       const targetService = services.servicesList.find(s => s.fullName === serviceKey)
       if (!targetService) {
         throw new Error(`Service not found in loaded services: ${serviceKey}`)
       }
 
-      const rustServices = [
-        {
-          name: targetService.name,
-          path: targetService.path,
-          port: targetService.port,
-          full_name: targetService.fullName,
-          on,
-          category: targetService.category,
-          config: targetService.config,
-          start_command: targetService.startCommand,
-        },
-      ]
-
+      const command = on ? 'dev5_start' : 'dev5_stop'
       toast.success(`./dev5 ${on ? 'start' : 'stop'} ${targetService.name}`)
 
-      const actions = await invoke<string[]>('ensure_services_running', {
-        services: rustServices,
+      await invoke(command, {
+        servicePath: targetService.path,
+        names: [targetService.name],
       })
-
-      console.log('Service management actions:', actions)
     } catch (error) {
       console.error('Failed to manage services:', error)
       toast.error('Failed to manage services', {
@@ -291,25 +276,16 @@ export function useCreateSettingsContext() {
     })
 
     try {
-      const rustServices = services.servicesList.map(s => ({
-        name: s.name,
-        path: s.path,
-        port: s.port,
-        full_name: s.fullName,
-        on: false,
-        category: s.category,
-        config: s.config,
-        start_command: s.startCommand,
-      }))
+      const names = services.servicesList.map(s => s.name)
+      if (names.length === 0) return
 
-      const names = rustServices.map(s => s.name).join(',')
-      toast.success(`./dev5 stop ${names}`)
+      const firstService = services.servicesList[0]
+      toast.success(`./dev5 stop ${names.join(',')}`)
 
-      const actions = await invoke<string[]>('ensure_services_running', {
-        services: rustServices,
+      await invoke('dev5_stop', {
+        servicePath: firstService.path,
+        names,
       })
-
-      console.log('Stop all services actions:', actions)
     } catch (error) {
       console.error('Failed to stop all services:', error)
       toast.error('Failed to stop all services', {

@@ -1,7 +1,7 @@
 use crate::services::get_services_in_services;
 use crate::types::{AppSettings, ServiceData, ServiceMetrics, ServiceProcessesState, ServicesResponse};
 use serde::Deserialize;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io;
 use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
@@ -39,42 +39,32 @@ pub async fn prepare_services_start(services: Vec<ServiceData>) -> Result<(), St
     Ok(())
 }
 
-/// Ensure the correct services are running based on their 'on' state via dev5.
+/// Start one or more services via `./dev5 start name1,name2,...`.
 #[tauri::command]
-pub async fn ensure_services_running(services: Vec<ServiceData>) -> Result<Vec<String>, String> {
-    println!("Ensuring services are running via dev5...");
-
-    if services.is_empty() {
-        return Ok(vec![]);
+pub async fn dev5_start(service_path: String, names: Vec<String>) -> Result<(), String> {
+    if names.is_empty() {
+        return Ok(());
     }
 
-    let repo_root = repo_root_from_services(&services)?;
-    let mut actions = Vec::new();
-
-    let stop_selectors = collect_stop_selectors(&repo_root, &services);
-    if !stop_selectors.is_empty() {
-        let args = vec!["stop".to_string(), stop_selectors.join(",")];
-        let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("./dev5 {}", args.join(" ")));
-    }
-
-    let start_selectors = collect_service_selectors(&services, true);
-    if !start_selectors.is_empty() {
-        let args = vec!["start".to_string(), start_selectors.join(",")];
-        let _ = run_dev5_command(&repo_root, &args)?;
-        actions.push(format!("./dev5 {}", args.join(" ")));
-    }
-
-    println!("Service management via dev5 completed. Actions: {:?}", actions);
-    Ok(actions)
+    let repo_root = repo_root_from_service_path(&service_path)?;
+    let selector = names.join(",");
+    let args = vec!["start".to_string(), selector];
+    run_dev5_command(&repo_root, &args)?;
+    Ok(())
 }
 
-/// Stop all currently running services
+/// Stop one or more services via `./dev5 stop name1,name2,...`.
 #[tauri::command]
-pub async fn stop_all_services_command() -> Result<Vec<String>, String> {
-    Ok(vec![
-        "dev4 no longer stops services directly. Use `./dev5 stop <services>`.".to_string(),
-    ])
+pub async fn dev5_stop(service_path: String, names: Vec<String>) -> Result<(), String> {
+    if names.is_empty() {
+        return Ok(());
+    }
+
+    let repo_root = repo_root_from_service_path(&service_path)?;
+    let selector = names.join(",");
+    let args = vec!["stop".to_string(), selector];
+    run_dev5_command(&repo_root, &args)?;
+    Ok(())
 }
 
 /// Get output for a specific service.
@@ -298,34 +288,6 @@ struct ProcessSample {
     ppid: u32,
     cpu: f64,
     rss_kb: f64,
-}
-
-fn collect_service_selectors(services: &[ServiceData], on: bool) -> Vec<String> {
-    let mut selectors: BTreeSet<String> = BTreeSet::new();
-    for service in services {
-        if service.on == on {
-            selectors.insert(service.name.clone());
-        }
-    }
-    selectors.into_iter().collect()
-}
-
-fn collect_stop_selectors(repo_root: &Path, services: &[ServiceData]) -> Vec<String> {
-    let pids_dir = repo_root.join(".local").join("pids");
-    let mut selectors: BTreeSet<String> = BTreeSet::new();
-
-    for service in services {
-        if service.on {
-            continue;
-        }
-
-        let pid_file = pids_dir.join(format!("{}.json", service.name));
-        if pid_file.exists() {
-            selectors.insert(service.name.clone());
-        }
-    }
-
-    selectors.into_iter().collect()
 }
 
 fn repo_root_from_services(services: &[ServiceData]) -> Result<PathBuf, String> {
