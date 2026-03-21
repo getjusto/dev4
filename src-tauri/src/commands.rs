@@ -328,7 +328,7 @@ fn find_repo_root(start: &Path) -> Option<PathBuf> {
 fn is_services_repo_root(path: &Path) -> bool {
     path.join("services").is_dir()
         && path.join("tools").is_dir()
-        && path.join("tools").join("dev5").join("Cargo.toml").is_file()
+        && path.join("tools").join("dev5").is_dir()
         && path.join("package.json").is_file()
 }
 
